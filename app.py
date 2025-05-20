@@ -3,35 +3,34 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# Load your CV and split into chunks
+# Load CV data
 with open("cv.txt", "r") as f:
     cv_chunks = [line.strip() for line in f if line.strip()]
 
-# Load embedding model
+# Load model
 model = SentenceTransformer('all-MiniLM-L6-v2')
 cv_embeddings = model.encode(cv_chunks)
 
-def answer_question(question, history):
+def respond(message, chat_history):
     # Embed the question
-    question_embedding = model.encode([question])
+    question_embedding = model.encode([message])
     
     # Find most relevant CV chunk
     similarities = cosine_similarity(question_embedding, cv_embeddings)
     best_index = np.argmax(similarities)
     
-    return cv_chunks[best_index]
+    response = cv_chunks[best_index]
+    chat_history.append((message, response))
+    return "", chat_history
 
-# Updated interface without unsupported parameters
-iface = gr.ChatInterface(
-    answer_question,
-    chatbot=gr.Chatbot(height=300),
-    textbox=gr.Textbox(placeholder="Ask about my background", container=False, scale=7),
-    title="My CV Assistant",
-    description="Ask me anything about my professional experience and qualifications",
-    theme="soft",
-    examples=["What's your educational background?", "What programming languages do you know?"],
-    cache_examples=True,
-    clear_btn="Clear"
-)
+with gr.Blocks() as demo:
+    gr.Markdown("# My CV Assistant")
+    gr.Markdown("Ask me anything about my professional background")
+    
+    chatbot = gr.Chatbot(height=300)
+    msg = gr.Textbox(label="Your question")
+    clear = gr.ClearButton([msg, chatbot])
 
-iface.launch()
+    msg.submit(respond, [msg, chatbot], [msg, chatbot])
+
+demo.launch()
