@@ -1,4 +1,7 @@
-transformers
-torch
-llama-index
+
+
 gradio
+transformers
+sentence-transformers
+scikit-learn
+numpy
