@@ -1,34 +1,38 @@
 import gradio as gr
-from llama_index import GPTVectorStoreIndex, SimpleDirectoryReader, ServiceContext
-from llama_index.llms import HuggingFaceLLM
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-# Load your custom data
-documents = SimpleDirectoryReader("data").load_data()
+# Load your CV and split into chunks
+with open("cv.txt", "r") as f:
+    cv_chunks = [line.strip() for line in f if line.strip()]
 
-# Set up a small model like Phi-2
-model_name = "microsoft/phi-2"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32)
+# Load embedding model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+cv_embeddings = model.encode(cv_chunks)
 
-# Build service context with the model
-llm = HuggingFaceLLM(context_window=2048, max_new_tokens=256, model=model, tokenizer=tokenizer)
-service_context = ServiceContext.from_defaults(llm=llm)
+def answer_question(question):
+    # Embed the question
+    question_embedding = model.encode([question])
+    
+    # Find most relevant CV chunk
+    similarities = cosine_similarity(question_embedding, cv_embeddings)
+    best_index = np.argmax(similarities)
+    
+    return cv_chunks[best_index]
 
-# Create index
-index = GPTVectorStoreIndex.from_documents(documents, service_context=service_context)
-chat_engine = index.as_chat_engine(chat_mode="condense_question", verbose=True)
+iface = gr.ChatInterface(
+    answer_question,
+    chatbot=gr.Chatbot(height=300),
+    textbox=gr.Textbox(placeholder="Ask about my background", container=False, scale=7),
+    title="My CV Assistant",
+    description="Ask me anything about my professional experience and qualifications",
+    theme="soft",
+    examples=["What's your educational background?", "What programming languages do you know?"],
+    cache_examples=True,
+    retry_btn=None,
+    undo_btn=None,
+    clear_btn="Clear",
+)
 
-# Define chat function
-def chat_fn(message, history):
-    response = chat_engine.chat(message)
-    return str(response)
-
-# Launch chatbot UI
-gr.ChatInterface(
-    chat_fn,
-    title="Ask Me About My Work",
-    description="Chat with my AI agent to learn about my skills, experience, and projects.",
-    theme="default"
-).launch()
+iface.launch()
