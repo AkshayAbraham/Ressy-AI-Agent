@@ -1,5 +1,5 @@
 import gradio as gr
-from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext
+from llama_index import GPTVectorStoreIndex, SimpleDirectoryReader, ServiceContext
 from llama_index.llms import HuggingFaceLLM
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
@@ -17,7 +17,7 @@ llm = HuggingFaceLLM(context_window=2048, max_new_tokens=256, model=model, token
 service_context = ServiceContext.from_defaults(llm=llm)
 
 # Create index
-index = VectorStoreIndex.from_documents(documents, service_context=service_context)
+index = GPTVectorStoreIndex.from_documents(documents, service_context=service_context)
 chat_engine = index.as_chat_engine(chat_mode="condense_question", verbose=True)
 
 # Define chat function
