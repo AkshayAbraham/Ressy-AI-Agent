@@ -1,3 +1,8 @@
-gpt-index
+llama-index
+llama-index-llms-huggingface
+llama-index-embeddings-huggingface
 gradio
+transformers
+torch
 sentence-transformers
+pypdf # Add this only if you put .pdf files in your 'data' folder
