@@ -1,6 +1,6 @@
 
 
-gradio
+gradio>=3.50.0
 transformers
 sentence-transformers
 scikit-learn
