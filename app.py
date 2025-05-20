@@ -1,81 +1,60 @@
 import gradio as gr
 import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI # Keep this import
-from llama_index.llms.huggingface import HuggingFaceLLM # Keep this for local fallback
+# We will ONLY use HuggingFaceLLM for a local model for now
+from llama_index.llms.huggingface import HuggingFaceLLM
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from transformers import AutoTokenizer, AutoModelForCausalLM # Only for local fallback
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-# --- Configuration for LLM and Embeddings ---
+# --- Configuration for Local LLM and Embeddings (For Free Tier) ---
 
-# 1. Hugging Face Inference API (Recommended for conversational LLM on free tier)
-# This requires HF_TOKEN to be set as a secret in your Hugging Face Space settings.
-HF_TOKEN = os.getenv("HF_TOKEN")
+# We are explicitly choosing a very small local LLM that *should* fit on CPU Basic.
+# Its quality will be limited, but it avoids Inference API issues.
+local_llm_model_name = "facebook/opt-125m" # A very small Causal Language Model
 
-if HF_TOKEN:
-    print("HF_TOKEN found. Attempting to use Hugging Face Inference API for LLM...")
-    try:
-        # Changed model_name to a highly reliable instruction-tuned model
-        llm = HuggingFaceInferenceAPI(
-            model_name="mistralai/Mistral-7B-Instruct-v0.2", # <-- UPDATED MODEL
-            token=HF_TOKEN,
-            temperature=0.1, # Lower temperature for more factual, less creative responses
-            max_new_tokens=256 # Good practice to limit response length
-        )
-        print(f"Successfully initialized LLM using Hugging Face Inference API with model: {llm.model_name}")
-    except Exception as e:
-        print(f"Error initializing Hugging Face Inference API LLM: {e}")
-        print("Falling back to a small local model (if available) or dummy LLM.")
-        llm = None # Set to None so the fallback logic can kick in
-else:
-    print("HF_TOKEN not found. Falling back to a small local LLM (may be limited).")
-    llm = None
+print(f"Attempting to load local LLM: {local_llm_model_name}...")
+try:
+    # Load tokenizer and model for the chosen small LLM
+    tokenizer = AutoTokenizer.from_pretrained(local_llm_model_name)
+    model = AutoModelForCausalLM.from_pretrained(
+        local_llm_model_name,
+        torch_dtype=torch.float32,  # Use float32 for CPU to avoid errors
+        low_cpu_mem_usage=True     # Optimize for low CPU memory
+    )
 
-# --- Fallback for LLM (if HF_TOKEN is not set or Inference API fails) ---
-if llm is None: # Only attempt local if Inference API failed or HF_TOKEN was missing
-    # Attempt to load a *very small causal language model* that *might* fit on CPU Basic.
-    # Note: Even these are challenging for the free tier due to memory/CPU.
-    # "facebook/opt-125m" is a very small causal model, but its quality is limited.
-    local_model_name = "facebook/opt-125m" # This is a very small *causal* model
-    try:
-        print(f"Attempting to load local LLM: {local_model_name}...")
-        tokenizer = AutoTokenizer.from_pretrained(local_model_name)
-        model = AutoModelForCausalLM.from_pretrained(local_model_name,
-                                                     torch_dtype=torch.float32,
-                                                     low_cpu_mem_usage=True)
+    # Ensure the model is moved to CPU
+    model.to("cpu")
 
-        model.to("cpu") # Ensure model is on CPU
+    llm = HuggingFaceLLM(
+        context_window=2048, # Adjust based on model's max context length (OPT-125M is 2048)
+        max_new_tokens=256,  # Limit generation length
+        generate_kwargs={"temperature": 0.1, "do_sample": True, "top_p": 0.9}, # Added top_p for better generation
+        tokenizer=tokenizer,
+        model=model,
+        device_map="cpu",    # Force CPU usage for free tier
+    )
+    print(f"Successfully loaded local LLM: {local_llm_model_name}")
 
-        llm = HuggingFaceLLM(
-            context_window=2048,
-            max_new_tokens=256,
-            generate_kwargs={"temperature": 0.1, "do_sample": True},
-            tokenizer=tokenizer,
-            model=model,
-            device_map="cpu",
-        )
-        print(f"Successfully loaded local LLM: {local_model_name}")
-    except Exception as e:
-        print(f"CRITICAL ERROR: Could not load any functional LLM (local or Inference API). Details: {e}")
-        print("The chatbot will not be able to answer questions correctly.")
-        # Define a basic LLM stub that adheres to the LlamaIndex LLM interface for the Assertion to pass
-        from llama_index.core.llms import CustomLLM, CompletionResponse
+except Exception as e:
+    print(f"CRITICAL ERROR: Could not load local LLM '{local_llm_model_name}'. Details: {e}")
+    print("The chatbot will not be able to answer questions correctly.")
+    # Define a basic LLM stub that adheres to the LlamaIndex LLM interface
+    from llama_index.core.llms import CustomLLM, CompletionResponse
 
-        class FallbackLLM(CustomLLM):
-            def complete(self, prompt, **kwargs):
-                return CompletionResponse(text="I'm sorry, my language model could not be loaded. Please check the Space logs and ensure your HF_TOKEN is set for better performance.")
-            async def acomplete(self, prompt, **kwargs):
-                return self.complete(prompt, **kwargs)
-            def chat(self, messages, **kwargs):
-                # For chat, simply use the last message content as the prompt
-                return self.complete(str(messages[-1].content))
+    class FallbackLLM(CustomLLM):
+        def complete(self, prompt, **kwargs):
+            return CompletionResponse(text="I'm sorry, my language model could not be loaded. Please check the Space logs for errors during LLM loading.")
+        async def acomplete(self, prompt, **kwargs):
+            return self.complete(prompt, **kwargs)
+        def chat(self, messages, **kwargs):
+            return self.complete(str(messages[-1].content)) # Simple fallback for chat
 
-
-        llm = FallbackLLM()
+    llm = FallbackLLM()
 
 
 # 2. Embedding model (Crucial for RAG)
+# This model converts text into numerical vectors for searching your data.
 print("Loading embedding model BAAI/bge-small-en-v1.5...")
 try:
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
@@ -92,6 +71,7 @@ except Exception as e:
 # --- Set global LlamaIndex settings ---
 Settings.llm = llm
 Settings.embed_model = embed_model
+# Settings.chunk_size = 512 # You might want to adjust chunk size for embedding
 
 
 # --- Data Loading and Indexing ---
@@ -115,8 +95,6 @@ except Exception as e:
 # --- Gradio Interface ---
 def chat_with_me(message, history):
     try:
-        # Gradio's chat interface passes 'history', but LlamaIndex's chat_engine
-        # handles its own internal history, so we just pass the new message.
         response = chat_engine.chat(message)
         return str(response)
     except Exception as e:
