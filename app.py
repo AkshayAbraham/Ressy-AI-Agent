@@ -1,9 +1,8 @@
-from llama_index import VectorStoreIndex, SimpleDirectoryReader
+from gpt_index import GPTVectorStoreIndex, SimpleDirectoryReader
 import gradio as gr
 
-# Load data from the "data/" directory
 documents = SimpleDirectoryReader("data").load_data()
-index = VectorStoreIndex.from_documents(documents)
+index = GPTVectorStoreIndex.from_documents(documents)
 chat_engine = index.as_chat_engine(chat_mode="condense_question", verbose=True)
 
 def chat_with_me(message, history):
