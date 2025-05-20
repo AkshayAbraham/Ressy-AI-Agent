@@ -1,9 +1,4 @@
-llama-index
-llama-index-llms-huggingface-api
-llama-index-llms-huggingface  # <--- ADD THIS LINE
-llama-index-embeddings-huggingface
-gradio
 transformers
 torch
-sentence-transformers
-pypdf # Optional, if you have PDF documents
+llama-index
+gradio
