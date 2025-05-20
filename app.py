@@ -11,7 +11,7 @@ with open("cv.txt", "r") as f:
 model = SentenceTransformer('all-MiniLM-L6-v2')
 cv_embeddings = model.encode(cv_chunks)
 
-def answer_question(question):
+def answer_question(question, history):
     # Embed the question
     question_embedding = model.encode([question])
     
@@ -21,6 +21,7 @@ def answer_question(question):
     
     return cv_chunks[best_index]
 
+# Updated interface without unsupported parameters
 iface = gr.ChatInterface(
     answer_question,
     chatbot=gr.Chatbot(height=300),
@@ -30,9 +31,7 @@ iface = gr.ChatInterface(
     theme="soft",
     examples=["What's your educational background?", "What programming languages do you know?"],
     cache_examples=True,
-    retry_btn=None,
-    undo_btn=None,
-    clear_btn="Clear",
+    clear_btn="Clear"
 )
 
 iface.launch()
