@@ -4,7 +4,14 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 from time import time
 import re
 
-# Your professional profile
+# Install required dependencies
+try:
+    import sentencepiece
+except ImportError:
+    import subprocess, sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "sentencepiece"])
+    import sentencepiece
+
 PROFILE = """
 Name: Arun Sharma
 Title: Machine Learning Engineer
@@ -14,35 +21,28 @@ Education: B.Tech in CS
 Strengths: Fast learner, team player, good communicator
 """
 
-# FLAN-T5 optimized prompt template
-SYSTEM_PROMPT = """Respond as Arun's professional agent. Rules:
-1. Always start with "As Arun's agent"
-2. Use third-person (Arun has...)
-3. Be concise (2 sentences max)
-4. End with a question
+# Improved prompt template
+SYSTEM_PROMPT = """Generate a professional response as Arun's agent using this format:
+[Response]
+As Arun's agent, [answer]. [Relevant skill/experience]. [Question]
 
-Arun's Profile:
+Profile:
 {profile}
 
-Conversation History:
+History:
 {history}
 
-Recruiter: {input}
-Agent:"""
+Input: {input}
+Response:"""
 
-# Initialize model
-print("⚙️ Loading FLAN-T5...")
 tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
 model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
-print("✅ Model ready!")
 
 def format_history(history):
-    return "\n".join([f"Recruiter: {msg}\nAgent: {response}" for msg, response in history])
+    return "\n".join([f"Input: {msg}\nResponse: {response}" for msg, response in history])
 
 def generate_response(message, history):
     try:
-        start_time = time()
-        
         prompt = SYSTEM_PROMPT.format(
             profile=PROFILE,
             history=format_history(history),
@@ -52,53 +52,28 @@ def generate_response(message, history):
         inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
         outputs = model.generate(
             inputs.input_ids,
-            max_new_tokens=150,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9
+            max_new_tokens=100,
+            num_beams=3,
+            early_stopping=True
         )
         
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Post-processing
+        # Clean up response
+        response = response.replace("Response:", "").strip()
         if not response.startswith("As Arun's agent"):
             response = f"As Arun's agent, {response}"
-            
-        response = (
-            response.replace("I have", "Arun has")
-            .replace("I am", "Arun is")
-            .replace("my", "Arun's")
-            .replace("I ", "Arun ")
-            .replace(" me", " him")
-        )
         
-        print(f"⏱️ Response in {time()-start_time:.1f}s")
         return "", history + [(message, response)]
     
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"Error: {str(e)}")
         return "", history + [(message, "Please ask again")]
 
-# Gradio interface with working Enter key
-with gr.Blocks(js="""() => {
-    const txtArea = document.querySelector('textarea');
-    txtArea.placeholder = "Type message (Enter to send, Shift+Enter for new line)";
-    txtArea.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            document.querySelector('button.primary').click();
-        }
-    });
-}""") as demo:
-    gr.Markdown("""# 🤖 Arun's Professional Agent (FLAN-T5)""")
-    
+with gr.Blocks() as demo:
+    gr.Markdown("# 🤖 Arun's Professional Agent")
     chatbot = gr.Chatbot(height=350)
-    msg = gr.Textbox(label="Message", lines=2)
-    submit_btn = gr.Button("Send", variant="primary")
-    clear_btn = gr.Button("Clear")
-    
+    msg = gr.Textbox(label="Message", placeholder="Type your question")
     msg.submit(generate_response, [msg, chatbot], [msg, chatbot])
-    submit_btn.click(generate_response, [msg, chatbot], [msg, chatbot])
-    clear_btn.click(lambda: None, None, chatbot, queue=False)
 
 demo.launch()
