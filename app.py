@@ -1,7 +1,6 @@
 # app.py
 import gradio as gr
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-import torch
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 from time import time
 import re
 
@@ -15,44 +14,27 @@ Education: B.Tech in CS
 Strengths: Fast learner, team player, good communicator
 """
 
-# Optimized system prompt for TinyLlama
-SYSTEM_PROMPT = """[INST] <<SYS>>
-You are Arun Sharma's professional agent. Rules:
-1. Always say "As Arun's agent" first
+# FLAN-T5 optimized prompt template
+SYSTEM_PROMPT = """Respond as Arun's professional agent. Rules:
+1. Always start with "As Arun's agent"
 2. Use third-person (Arun has...)
-3. Be concise (2-3 sentences max)
+3. Be concise (2 sentences max)
 4. End with a question
 
 Arun's Profile:
 {profile}
-<</SYS>>
 
+Conversation History:
 {history}
-Recruiter: {input} [/INST]
+
+Recruiter: {input}
 Agent:"""
 
-def load_model():
-    print("🚀 Loading TinyLlama...")
-    model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-    
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        torch_dtype=torch.float32,
-        device_map="auto",
-        low_cpu_mem_usage=True
-    )
-    
-    return pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        torch_dtype=torch.float32
-    )
-
-print("⚙️ Initializing...")
-pipe = load_model()
-print("✅ Ready!")
+# Initialize model
+print("⚙️ Loading FLAN-T5...")
+tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
+model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
+print("✅ Model ready!")
 
 def format_history(history):
     return "\n".join([f"Recruiter: {msg}\nAgent: {response}" for msg, response in history])
@@ -67,20 +49,18 @@ def generate_response(message, history):
             input=message
         )
         
-        output = pipe(
-            prompt,
+        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+        outputs = model.generate(
+            inputs.input_ids,
             max_new_tokens=150,
             do_sample=True,
             temperature=0.7,
-            top_p=0.9,
-            repetition_penalty=1.1,
-            eos_token_id=pipe.tokenizer.eos_token_id
+            top_p=0.9
         )
         
-        response = output[0]['generated_text'].split("Agent:")[-1].strip()
-        response = re.sub(r"Recruiter:.*", "", response, flags=re.DOTALL).strip()
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Ensure proper disclosure and third-person
+        # Post-processing
         if not response.startswith("As Arun's agent"):
             response = f"As Arun's agent, {response}"
             
@@ -89,35 +69,36 @@ def generate_response(message, history):
             .replace("I am", "Arun is")
             .replace("my", "Arun's")
             .replace("I ", "Arun ")
+            .replace(" me", " him")
         )
         
-        print(f"⏱️ Generated in {time()-start_time:.1f}s")
+        print(f"⏱️ Response in {time()-start_time:.1f}s")
         return "", history + [(message, response)]
     
     except Exception as e:
         print(f"❌ Error: {str(e)}")
         return "", history + [(message, "Please ask again")]
 
-# Gradio interface with Enter key fix
-with gr.Blocks(title="Arun's Agent (TinyLlama)") as demo:
-    gr.Markdown("""# 🤖 Arun Sharma's Professional Agent""")
+# Gradio interface with working Enter key
+with gr.Blocks(js="""() => {
+    const txtArea = document.querySelector('textarea');
+    txtArea.placeholder = "Type message (Enter to send, Shift+Enter for new line)";
+    txtArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.querySelector('button.primary').click();
+        }
+    });
+}""") as demo:
+    gr.Markdown("""# 🤖 Arun's Professional Agent (FLAN-T5)""")
     
     chatbot = gr.Chatbot(height=350)
-    msg = gr.Textbox(
-        label="Message",
-        placeholder="Type message + Enter to send",
-        lines=2
-    )
-    clear = gr.Button("Clear Chat")
+    msg = gr.Textbox(label="Message", lines=2)
+    submit_btn = gr.Button("Send", variant="primary")
+    clear_btn = gr.Button("Clear")
     
-    # Configure submit actions
-    msg.submit(
-        fn=generate_response,
-        inputs=[msg, chatbot],
-        outputs=[msg, chatbot],
-        queue=False
-    )
-    clear.click(lambda: None, None, chatbot, queue=False)
+    msg.submit(generate_response, [msg, chatbot], [msg, chatbot])
+    submit_btn.click(generate_response, [msg, chatbot], [msg, chatbot])
+    clear_btn.click(lambda: None, None, chatbot, queue=False)
 
-# Required for Hugging Face Spaces
 demo.launch()
