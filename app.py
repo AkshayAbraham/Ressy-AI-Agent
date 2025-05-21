@@ -96,7 +96,7 @@ def generate_response(message, history):
     
     except Exception as e:
         print(f"❌ Error: {str(e)}")
-        return "", history + [(message, "Please ask again"))]
+        return "", history + [(message, "Please ask again")]
 
 # Gradio interface with Enter key fix
 with gr.Blocks(title="Arun's Agent (TinyLlama)") as demo:
