@@ -1,3 +1,4 @@
 transformers
 gradio
 torch
+accelerate
