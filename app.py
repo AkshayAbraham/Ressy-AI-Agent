@@ -64,15 +64,16 @@ def generate_response(message, history):
 
         full_response = outputs[0]["generated_text"]
         response_parts = full_response.split("Arun's Agent:")
-        new_response = response_parts[-1].strip() if len(response_parts) > 1 else "Could you please clarify your question?"
+        new_response = response_parts[-1].strip() if len(response_parts) > 1 else "Could you clarify your question?"
 
+        # Ensure proper formatting
         if not new_response.startswith(("As Arun's agent", "As an AI")):
             new_response = f"As Arun's professional agent, {new_response[0].lower() + new_response[1:]}"
-        
-        return "", history + [(message, new_response)]
+
+        return new_response, history + [(message, new_response)]  # ✅ Fix: Return string & updated history
 
     except Exception as e:
-        return "", history + [(message, "Apologies, I'm having technical difficulties. Please try again.")]
+        return "Apologies, I'm experiencing technical difficulties.", history + [(message, "An error occurred. Please try again.")]
 
 # Create Gradio UI
 interface = gr.ChatInterface(generate_response)
