@@ -1,4 +1,4 @@
-transformers
-gradio
-torch
-accelerate
+gradio>=3.50.0
+sentence-transformers
+scikit-learn
+numpy
