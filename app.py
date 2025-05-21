@@ -1,44 +1,81 @@
-# Install dependencies (Hugging Face Spaces will handle this automatically)
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 import gradio as gr
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import torch
 
-# Load Phi-2 model & tokenizer
-model_name = "microsoft/phi-2"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+# Professional profile
+PROFILE = """
+Name: Arun Sharma
+Title: Machine Learning Engineer
+Skills: Python, PyTorch, TensorFlow, NLP, Computer Vision, LLMs, Docker, REST APIs
+Experience: 3 years in AI/ML
+Education: B.Tech in CS
+Strengths: Fast learner, team player, good communicator
+"""
 
-# Define your professional profile
-profile = {
-    "name": "Arun Sharma",
-    "title": "Machine Learning Engineer",
-    "skills": ["Python", "PyTorch", "TensorFlow", "NLP", "Computer Vision", "LLMs", "Docker", "REST APIs"],
-    "experience": "3 years in AI/ML",
-    "education": "B.Tech in CS",
-    "strengths": ["Fast learner", "Team player", "Good communicator"]
-}
+# Optimized system prompt
+SYSTEM_PROMPT = """# ROLE: Professional Agent for Arun Sharma
 
-# Function to generate chatbot responses
-def chat_with_agent(job_description):
-    prompt = f"""
-    You are Arun Sharma, a skilled Machine Learning Engineer. A recruiter has shared a job description:
-    "{job_description}"
-    
-    Respond naturally, smartly, and persuasively. Highlight relevant skills, even if they only partially match. Explain why you're a strong candidate.
-    """
-    inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs, max_length=300)
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
+## YOUR PURPOSE
+Represent Arun professionally while being transparent about your AI nature
 
-# Create Gradio chat interface
-interface = gr.Interface(
-    fn=chat_with_agent,
-    inputs=gr.Textbox(label="Paste Job Description"),
-    outputs=gr.Textbox(label="AI Agent Response"),
-    title="AI-Powered Professional Agent",
-    description="Let recruiters chat with your AI agent instead of reading a resume!",
-)
+## ARUN'S PROFILE
+{profile}
 
-# Launch the chatbot
+## RESPONSE RULES
+1. Always begin with disclosure: "As Arun's professional agent..."
+2. Use third-person references only
+3. Never claim personal experiences
+4. For unclear requests: "I'll verify with Arun"
+
+## RESPONSE GUIDELINES
+1. Analyze requirements first
+2. Match to Arun's qualifications
+3. Highlight transferable skills
+4. Be honest about limitations
+5. End with an engaging question
+
+## CURRENT CONVERSATION
+{history}
+Recruiter: {input}
+Arun's Agent:"""
+
+def load_model():
+    model_id = "google/gemma-1.1-2b-it"
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id, device_map="cpu")
+
+    return pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+pipe = load_model()
+
+def format_history(history):
+    return "\n".join([f"Recruiter: {msg}\nArun's Agent: {response}" for msg, response in history])
+
+def generate_response(message, history):
+    try:
+        prompt = SYSTEM_PROMPT.format(
+            profile=PROFILE,
+            history=format_history(history),
+            input=message
+        )
+
+        outputs = pipe(prompt, max_new_tokens=300, do_sample=True, temperature=0.6, top_k=40, top_p=0.9)
+
+        full_response = outputs[0]["generated_text"]
+        response_parts = full_response.split("Arun's Agent:")
+        new_response = response_parts[-1].strip() if len(response_parts) > 1 else "Could you please clarify your question?"
+
+        if not new_response.startswith(("As Arun's agent", "As an AI")):
+            new_response = f"As Arun's professional agent, {new_response[0].lower() + new_response[1:]}"
+        
+        return "", history + [(message, new_response)]
+
+    except Exception as e:
+        return "", history + [(message, "Apologies, I'm having technical difficulties. Please try again.")]
+
+# Create Gradio UI
+interface = gr.ChatInterface(generate_response)
+
+# Launch for Hugging Face Spaces
 interface.launch()
