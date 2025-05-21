@@ -2,7 +2,7 @@ import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 
-# Professional profile
+# Professional profile (pre-loaded in backend)
 PROFILE = """
 Name: Arun Sharma
 Title: Machine Learning Engineer
@@ -43,10 +43,11 @@ def load_model():
     model_id = "google/gemma-1.1-2b-it"
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id, device_map="cpu")
+    model = AutoModelForCausalLM.from_pretrained(model_id)
 
     return pipeline("text-generation", model=model, tokenizer=tokenizer)
 
+# Initialize model
 pipe = load_model()
 
 def format_history(history):
@@ -60,13 +61,13 @@ def generate_response(message, history):
             input=message
         )
 
-        outputs = pipe(prompt, max_new_tokens=300, do_sample=True, temperature=0.6, top_k=40, top_p=0.9)
+        outputs = pipe(prompt, max_new_tokens=200, do_sample=True, temperature=0.7, top_k=40, top_p=0.9)
 
         full_response = outputs[0]["generated_text"]
         response_parts = full_response.split("Arun's Agent:")
         new_response = response_parts[-1].strip() if len(response_parts) > 1 else "Could you clarify your question?"
 
-        # Ensure proper formatting
+        # Ensure proper disclosure
         if not new_response.startswith(("As Arun's agent", "As an AI")):
             new_response = f"As Arun's professional agent, {new_response[0].lower() + new_response[1:]}"
 
@@ -75,8 +76,8 @@ def generate_response(message, history):
     except Exception as e:
         return "Apologies, I'm experiencing technical difficulties.", history + [(message, "An error occurred. Please try again.")]
 
-# Create Gradio UI
+# Build Gradio chat interface for Hugging Face Spaces
 interface = gr.ChatInterface(generate_response)
 
-# Launch for Hugging Face Spaces
+# Launch chatbot
 interface.launch()
