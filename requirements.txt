@@ -1,7 +1,12 @@
+gradio
 torch
 transformers
-gradio
-sentencepiece>=0.1.99
-accelerate
-sentence-transformers # For creating embeddings
-faiss-cpu             # For efficient similarity search
+groq
+langchain
+langchain-community
+langchain-core
+langchain-text-splitters
+chromadb
+sentence-transformers
+python-dotenv
+numpy<2.0
