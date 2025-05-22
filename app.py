@@ -1,4 +1,5 @@
 import gradio as gr
+import torch  # ✅ Needed for model inference
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 # Load FLAN-T5 base model and tokenizer
@@ -6,7 +7,7 @@ model_name = "google/flan-t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
-# Shortened static profile (preloaded only once)
+# Static profile (trimmed for faster CPU response)
 profile = """
 Candidate Profile: Akshay Abraham
 - Computing Graduate with strong background in cheminformatics, bioinformatics, and computational chemistry.
@@ -17,7 +18,7 @@ Candidate Profile: Akshay Abraham
 - Soft Skills: Quick learner, Analytical thinker, Strong communicator, Team-oriented.
 """
 
-# Function to build optimized prompt
+# Prompt builder
 def build_prompt(user_input):
     return f"""You are a helpful assistant answering questions about a candidate's profile.
 
@@ -30,6 +31,7 @@ Assistant:"""
 def generate_response(user_input, chat_history=None):
     prompt = build_prompt(user_input)
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
+
     with torch.no_grad():
         output = model.generate(
             **inputs,
@@ -39,8 +41,8 @@ def generate_response(user_input, chat_history=None):
             top_k=50,
             pad_token_id=tokenizer.eos_token_id
         )
+
     response = tokenizer.decode(output[0], skip_special_tokens=True)
-    # Strip leading profile/echo if model repeats part of prompt
     cleaned_response = response.split("Assistant:")[-1].strip()
     return cleaned_response
 
