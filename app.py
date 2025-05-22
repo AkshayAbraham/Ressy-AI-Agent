@@ -52,7 +52,7 @@ body {
 /* We give the gr.Chatbot component an 'elem_id="chatbot"' to target it precisely */
 #chatbot {
     border-radius: 15px !important; /* Adjust as needed for more/less rounded corners */
-    background-color: #202020 !important; /* Very dark gray, similar to Hugging Face dark theme */
+    background-color: #333333 !important; /* Set to the same as body background */
     overflow: hidden; /* Ensures content respects the rounded corners */
     border: 1px solid #444444; /* Subtle border for definition */
 }
@@ -117,7 +117,7 @@ body {
     color: #FFFFFF !important; /* Make labels and markdown text white */
 }
 
-.gr-markdown h1, .gr-markdown h2, .gr-markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
+.gr-markdown h1, .gr-markdown h2, .gr.markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
     color: #FFFFFF !important; /* Ensure headers in markdown are white */
 }
 .gr-markdown a {
