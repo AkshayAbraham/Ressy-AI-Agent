@@ -3,3 +3,5 @@ transformers
 gradio
 sentencepiece>=0.1.99
 accelerate
+sentence-transformers # For creating embeddings
+faiss-cpu             # For efficient similarity search
