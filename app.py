@@ -66,6 +66,11 @@ body, .gradio-container {
     color: white !important;
 }
 
+/* Hide progress bar */
+.progress-bar {
+    display: none !important;
+}
+
 /* Input container */
 #input_container {
     position: relative;
@@ -130,11 +135,24 @@ body, .gradio-container {
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    transition: background-color 0.2s ease !important;
+    transition: all 0.2s ease !important;
 }
 
 #send_button:hover {
     background-color: #357ABD !important;
+}
+
+/* Loading spinner */
+#send_button.loading {
+    background-color: transparent !important;
+    border: 3px solid #f3f3f3 !important;
+    border-top: 3px solid #4a90e2 !important;
+    animation: spin 1s linear infinite !important;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
 }
 
 /* Hide default clear */
@@ -179,6 +197,13 @@ with gr.Blocks(css=custom_css) as demo:
         Returns:
             tuple: Updated chat history and cleared textbox
         """
+        # Add loading class to button
+        submit_js = """
+        document.getElementById('send_button').classList.add('loading');
+        document.getElementById('send_button').innerHTML = '';
+        """
+        submit.click(None, None, None, _js=submit_js)
+        
         # Perform semantic search to get relevant context from resume
         relevant_excerpts = semantic_search(message, retriever)
 
@@ -186,6 +211,13 @@ with gr.Blocks(css=custom_css) as demo:
         bot_message = resume_chat_completion(
             client, "llama-3.3-70b-versatile", message, relevant_excerpts
         )
+
+        # Remove loading class from button
+        submit_js = """
+        document.getElementById('send_button').classList.remove('loading');
+        document.getElementById('send_button').innerHTML = '➤';
+        """
+        submit.click(None, None, None, _js=submit_js)
 
         # Append to history and return both history and empty string for textbox
         chat_history.append({"role": "user", "content": message})
