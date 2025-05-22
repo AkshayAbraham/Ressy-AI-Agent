@@ -40,86 +40,107 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 custom_css = """
 /* Overall background color for the body and the main Gradio container */
 body, .gradio-container {
-    background-color: #1A1A1A !important; /* A very dark gray, almost black */
+    background-color: #1A1A1A !important;
+    color: white;
 }
 
-/* Rounded corners and background for the chatbot display area */
+/* Chatbot message area - blend with background */
 #chatbot {
-    border-radius: 15px !important;
-    background-color: #1A1A1A !important; /* Set to the same as body background */
-    overflow: hidden;
-    border: 1px solid #333333;
+    background-color: #1A1A1A !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
 }
 
-/* Styling for the individual message bubbles within the chatbot */
+/* Message bubbles */
 .gr-message-bubble {
-    border-radius: 12px !important;
-    padding: 10px 15px !important;
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    line-height: 1.6;
+    font-size: 15px;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-.gr-message-bubble.gr-message-user {
-    background-color: #007bff !important; /* A standard blue for user messages */
+.gr-message-user {
+    background-color: #007BFF !important;
+    color: white !important;
+    align-self: flex-end;
+}
+
+.gr-message-bot {
+    background-color: #2C2C2C !important;
     color: white !important;
 }
 
-.gr-message-bubble.gr-message-bot {
-    background-color: #444444 !important; /* Darker gray for bot messages */
-    color: white !important;
-}
-
-/* Input textbox styling:  Combined input and send button */
+/* Gemini-style input row */
 #input_row {
-    display: flex; /* Use flexbox to position input and button */
-    align-items: center; /* Vertically center the elements */
-    border-radius: 15px; /* Rounded corners for the entire row */
-    background-color: #2c2c2c; /* Background color for the input area */
-    border: 1px solid #555555;
-    padding-right: 5px; /* Add some padding on the right for the button */
-    margin-top: 5px; /* Add a bit of space between the chatbot and input */
+    display: flex;
+    align-items: center;
+    background-color: #2C2C2C;
+    border: 1px solid #444;
+    border-radius: 25px;
+    padding: 5px 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    transition: border 0.2s ease;
 }
 
+#input_row:focus-within {
+    border-color: #4a90e2;
+}
+
+/* Input textbox - Gemini feel */
 #input_textbox {
-    flex-grow: 1; /* Make the textbox take up remaining space */
-    border: none !important; /* Remove the textbox's individual border */
-    background-color: transparent !important; /* Make the textbox background transparent */
-    box-shadow: none !important; /* Remove any box shadow */
-    border-radius: 15px 0 0 15px !important; /* Rounded corners on the left */
+    flex-grow: 1;
+    border: none !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-size: 15px;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 #input_textbox textarea {
-    background-color: transparent !important; /* Ensure textarea is also transparent */
-    color: #FFFFFF !important; /* White text for input */
-    padding: 10px; /* Add padding inside the textarea */
+    background-color: transparent !important;
+    color: white !important;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 12px 0;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-/* Style for the send button (now inside the input row) */
+/* Placeholder like Gemini */
+#input_textbox textarea::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Send button with Gemini-style icon */
 #send_button {
-    background-color: #4a90e2 !important; /* Blue send button */
+    background-color: #4a90e2 !important;
     color: white !important;
-    border: none !important;
-    border-radius: 0 15px 15px 0 !important; /* Rounded corners on the right */
-    padding: 10px 15px !important;
-    cursor: pointer; /* Change cursor to pointer on hover */
-    height: auto; /* Allow the button to adjust its height */
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 #send_button:hover {
-    background-color: #357ABD !important; /* Darker blue on hover */
+    background-color: #357ABD !important;
 }
 
-
-/* Hide the Clear button */
+/* Hide default clear */
 .clear-button {
     display: none !important;
 }
-
-/* Placeholder styling (mimicking Gemini) */
-#input_textbox textarea::placeholder {
-  color: #999; /* Light gray placeholder text */
-  font-style: italic; /* Italic placeholder text */
-}
-
-
 """
 
 # --- Gradio UI Block ---
