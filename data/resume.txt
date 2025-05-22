@@ -1,0 +1,42 @@
+Summary:
+Akshay Abraham is a highly accomplished AI/ML and Full-stack developer with a strong background in Cheminformatics. He is known for delivering quantifiable results and innovative solutions across diverse technical domains.
+
+---
+
+Core Strengths:
+AI/ML: Built a Dialogflow AI Assistant saving researchers 15+ hours/month by automating 50+ weekly chemistry queries.
+Cheminformatics: Developed a drug discovery pipeline improving efficiency by 30% and boosted druglikeness prediction accuracy by 30% with Ligand Explorer.
+Full-stack Development: Created production-ready tools using Django, Docker, and Azure; developed a Job Tracker Chrome Extension used by 1000+ students.
+
+---
+
+Key Projects:
+Ligand Explorer: A project that boosted druglikeness prediction accuracy by 30% through advanced computational methods.
+AI Lab Assistant: A Dialogflow AI Assistant that automated 50+ weekly chemistry queries, saving researchers 15+ hours/month.
+Job Tracker Chrome Extension: A popular Chrome Extension developed that is used by over 1000+ students for job application tracking, streamlining their job search process.
+
+---
+
+Technical Skills:
+AI/ML, Cheminformatics, Full-stack Development, Django, Docker, Azure, Natural Language Processing, Machine Learning, Deep Learning, Python, Database Management (SQL, NoSQL), Cloud Computing, API Development, Data Analysis, Algorithm Design, Software Architecture.
+
+---
+
+Quantifiable Achievements:
+Saved researchers 15+ hours/month with Dialogflow AI Assistant.
+Improved drug discovery pipeline efficiency by 30%.
+Boosted druglikeness prediction accuracy by 30% with Ligand Explorer.
+Automated 50+ weekly chemistry queries.
+Developed Job Tracker Chrome Extension used by 1000+ students.
+
+---
+
+Work Experience:
+Innovative AI Labs: Senior AI/ML Engineer (Jan 2023 - Present). Leads development of scalable AI solutions, including enterprise Dialogflow integrations.
+ChemTech Pharma: Cheminformatics Scientist (Jul 2020 - Dec 2022). Designed and implemented drug discovery pipelines, focusing on predictive modeling.
+DevSolutions Co.: Full-stack Developer (Jun 2018 - Jun 2020). Built and maintained web applications, including a popular Chrome extension for job tracking.
+
+---
+
+Value Proposition:
+Akshay Abraham is a unique blend of scientific rigor and cutting-edge technical execution, consistently delivering solutions that not only meet but exceed expectations, driving efficiency and innovation.
