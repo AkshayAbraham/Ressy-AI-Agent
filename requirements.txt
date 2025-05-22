@@ -3,3 +3,4 @@ transformers
 gradio
 sentencepiece>=0.1.99
 accelerate
+bitsandbytes
