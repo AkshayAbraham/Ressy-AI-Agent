@@ -74,7 +74,7 @@ body, .gradio-container {
     background-color: #2C2C2C;
     border: 1px solid #444;
     border-radius: 25px;
-    padding: 5px 10px;
+    padding: 8px 15px;
     margin-top: 10px;
     margin-bottom: 20px;
     transition: border 0.2s ease;
@@ -91,20 +91,23 @@ body, .gradio-container {
     background-color: transparent !important;
     color: #fff !important;
     font-size: 15px;
-    padding-left: 12px;
-    padding-right: 50px;
-    margin-right: -40px;
+    padding: 8px 45px 8px 15px !important;
+    margin: 0 !important;
+    min-height: 20px !important;
+    box-shadow: none !important;
 }
 
 #input_textbox textarea {
     background-color: transparent !important;
     color: white !important;
-    resize: none;
-    border: none;
-    outline: none;
-    padding: 12px 0;
+    resize: none !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
     font-family: 'Segoe UI', sans-serif;
-    width: calc(100% - 20px);
+    margin: 0 !important;
+    min-height: 20px !important;
+    max-height: 120px !important;
 }
 
 /* Placeholder */
@@ -113,27 +116,35 @@ body, .gradio-container {
     font-style: italic;
 }
 
-/* Send button */
+/* Send button - perfectly circular */
 #send_button {
-    position: absolute;
-    right: 8px;
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     background-color: #4a90e2 !important;
     color: white !important;
-    border: none;
-    border-radius: 50%;
-    padding: 10px;
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
 }
 
 #send_button:hover {
     background-color: #357ABD !important;
+}
+
+/* Button icon */
+#send_button svg {
+    width: 20px !important;
+    height: 20px !important;
 }
 
 /* Hide default clear */
@@ -158,14 +169,16 @@ with gr.Blocks(css=custom_css) as demo:
 
     chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
 
-    with gr.Row(elem_id="input_row", equal_height=True):
+    with gr.Row(elem_id="input_row"):
         msg = gr.Textbox(
             label="",
             placeholder="Ask me anything about Akshay's profile...",
             container=False,
-            elem_id="input_textbox"
+            elem_id="input_textbox",
+            lines=1,
+            max_lines=5
         )
-        submit = gr.Button(value="➤", size="sm", elem_id="send_button")
+        submit = gr.Button("➤", elem_id="send_button")
 
     def respond(message, chat_history):
         """
