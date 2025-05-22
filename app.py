@@ -66,33 +66,29 @@ body, .gradio-container {
     color: white !important;
 }
 
-/* Input row container */
-#input_row {
+/* Input container */
+#input_container {
     position: relative;
-    display: flex;
-    align-items: center;
     background-color: #2C2C2C;
     border: 1px solid #444;
     border-radius: 25px;
-    padding: 8px 15px;
     margin-top: 10px;
     margin-bottom: 20px;
     transition: border 0.2s ease;
 }
 
-#input_row:focus-within {
+#input_container:focus-within {
     border-color: #4a90e2;
 }
 
 /* Input textbox */
 #input_textbox {
-    flex-grow: 1;
+    width: 100%;
     border: none !important;
     background-color: transparent !important;
     color: #fff !important;
     font-size: 15px;
-    padding: 8px 45px 8px 15px !important;
-    margin: 0 !important;
+    padding: 12px 50px 12px 15px !important;
     min-height: 20px !important;
     box-shadow: none !important;
 }
@@ -119,7 +115,7 @@ body, .gradio-container {
 /* Send button - perfectly circular */
 #send_button {
     position: absolute !important;
-    right: 10px !important;
+    right: 8px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     background-color: #4a90e2 !important;
@@ -139,12 +135,6 @@ body, .gradio-container {
 
 #send_button:hover {
     background-color: #357ABD !important;
-}
-
-/* Button icon */
-#send_button svg {
-    width: 20px !important;
-    height: 20px !important;
 }
 
 /* Hide default clear */
@@ -169,7 +159,7 @@ with gr.Blocks(css=custom_css) as demo:
 
     chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
 
-    with gr.Row(elem_id="input_row"):
+    with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
             placeholder="Ask me anything about Akshay's profile...",
