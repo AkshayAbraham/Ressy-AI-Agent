@@ -32,43 +32,37 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS for Styling ---
 custom_css = """
-/* Overall background color for the body and the main Gradio container */
+/* Hide all progress bars */
+.progress-bar, .progress {
+    display: none !important;
+}
+
+/* Overall styling */
 body, .gradio-container {
     background-color: #1A1A1A !important;
     color: white;
 }
 
-/* Chatbot message area - blend with background */
 #chatbot {
     background-color: #1A1A1A !important;
     border: none !important;
-    box-shadow: none !important;
     padding: 0 !important;
 }
 
-/* Message bubbles */
 .gr-message-bubble {
     border-radius: 16px !important;
     padding: 12px 16px !important;
     line-height: 1.6;
-    font-size: 15px;
-    font-family: 'Segoe UI', sans-serif;
 }
 
 .gr-message-user {
     background-color: #007BFF !important;
     color: white !important;
-    align-self: flex-end;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
-}
-
-/* Hide progress bar */
-.progress-bar {
-    display: none !important;
 }
 
 /* Input container */
@@ -79,73 +73,40 @@ body, .gradio-container {
     border-radius: 25px;
     margin-top: 10px;
     margin-bottom: 20px;
-    transition: border 0.2s ease;
-}
-
-#input_container:focus-within {
-    border-color: #4a90e2;
 }
 
 /* Input textbox */
 #input_textbox {
     width: 100%;
     border: none !important;
-    background-color: transparent !important;
-    color: #fff !important;
-    font-size: 15px;
-    padding: 12px 50px 12px 15px !important;
-    min-height: 20px !important;
-    box-shadow: none !important;
-}
-
-#input_textbox textarea {
-    background-color: transparent !important;
+    background: transparent !important;
     color: white !important;
-    resize: none !important;
-    border: none !important;
-    outline: none !important;
-    padding: 0 !important;
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0 !important;
-    min-height: 20px !important;
-    max-height: 120px !important;
+    padding: 12px 50px 12px 15px !important;
 }
 
-/* Placeholder */
-#input_textbox textarea::placeholder {
-    color: #aaa;
-    font-style: italic;
-}
-
-/* Send button - perfectly circular */
+/* Send button */
 #send_button {
     position: absolute !important;
     right: 8px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    background-color: #4a90e2 !important;
+    background: #4a90e2 !important;
     color: white !important;
     border: none !important;
     border-radius: 50% !important;
     width: 36px !important;
     height: 36px !important;
     padding: 0 !important;
-    margin: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
-}
-
-#send_button:hover {
-    background-color: #357ABD !important;
 }
 
 /* Loading spinner */
 #send_button.loading {
-    background-color: transparent !important;
-    border: 3px solid #f3f3f3 !important;
+    background: transparent !important;
+    border: 3px solid rgba(255,255,255,0.2) !important;
     border-top: 3px solid #4a90e2 !important;
     animation: spin 1s linear infinite !important;
 }
@@ -154,98 +115,71 @@ body, .gradio-container {
     0% { transform: translateY(-50%) rotate(0deg); }
     100% { transform: translateY(-50%) rotate(360deg); }
 }
-
-/* Hide default clear */
-.clear-button {
-    display: none !important;
-}
-"""
-
-# JavaScript for loading spinner
-loading_js = """
-function toggleLoading(start) {
-    const btn = document.getElementById('send_button');
-    if (start) {
-        btn.classList.add('loading');
-        btn.innerHTML = '';
-    } else {
-        btn.classList.remove('loading');
-        btn.innerHTML = '➤';
-    }
-}
 """
 
 # --- Gradio UI Block ---
-with gr.Blocks(css=custom_css, js=loading_js) as demo:
+with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
-    gr.Markdown("""
-    ## About this Chatbot
-    This is a Retrieval-Augmented Generation (RAG) chatbot powered by AI that allows you to interactively explore Akshay Abraham's professional profile.
-    - **Technology**: Utilizes advanced semantic search and a powerful language model (via Groq API).
-    - **Purpose**: Provide detailed, context-aware answers about Akshay's professional background, skills, and achievements.
-    - **How it works**:
-        1. Your question is semantically searched against resume chunks.
-        2. Relevant excerpts are retrieved from Akshay's profile.
-        3. A language model (Llama 3 70B hosted on Groq) generates a precise, contextual response.
-    """)
-
-    chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
-    loading_state = gr.State(False)  # To track loading state
+    
+    chatbot = gr.Chatbot(height=400, elem_id="chatbot")
+    loading_state = gr.State(False)
 
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
-            label="",
             placeholder="Ask me anything about Akshay's profile...",
-            container=False,
             elem_id="input_textbox",
-            lines=1,
-            max_lines=5
+            container=False
         )
         submit = gr.Button("➤", elem_id="send_button")
 
     def respond(message, chat_history, loading_state):
-        # Start loading
-        loading_state = True
-        yield {"__type__": "update", "visible": False}, chat_history, loading_state
+        # Clear input immediately
+        yield "", chat_history, True
         
-        # Perform semantic search to get relevant context from resume
+        # Get response
         relevant_excerpts = semantic_search(message, retriever)
-
-        # Get the LLM response using Groq API
         bot_message = resume_chat_completion(
             client, "llama-3.3-70b-versatile", message, relevant_excerpts
         )
-
-        # Append to history
-        chat_history.append({"role": "user", "content": message})
-        chat_history.append({"role": "assistant", "content": bot_message})
         
-        # End loading
-        loading_state = False
-        yield {"__type__": "update", "visible": True}, chat_history, loading_state
+        # Update chat
+        chat_history.append((message, bot_message))
+        yield "", chat_history, False
 
+    # Set up event handlers
     submit.click(
-        fn=respond,
-        inputs=[msg, chatbot, loading_state],
-        outputs=[submit, chatbot, loading_state],
-        api_name="chat"
+        respond,
+        [msg, chatbot, loading_state],
+        [msg, chatbot, loading_state],
+        queue=True
     )
     
-    # Additional JS to handle loading state changes
-    loading_state.change(
-        None,
-        inputs=[loading_state],
-        outputs=None,
-        js="(loading) => toggleLoading(loading)"
-    )
-
     msg.submit(
-        fn=respond,
-        inputs=[msg, chatbot, loading_state],
-        outputs=[submit, chatbot, loading_state],
-        api_name="chat_enter"
+        respond,
+        [msg, chatbot, loading_state],
+        [msg, chatbot, loading_state],
+        queue=True
+    )
+    
+    # Toggle loading spinner
+    loading_state.change(
+        lambda x: gr.Button(visible=not x),
+        loading_state,
+        submit,
+        js="""
+        function(start) {
+            const btn = document.getElementById('send_button');
+            if (start) {
+                btn.classList.add('loading');
+                btn.innerHTML = '';
+            } else {
+                btn.classList.remove('loading');
+                btn.innerHTML = '➤';
+            }
+            return start;
+        }
+        """
     )
 
-# Run the Gradio app
 if __name__ == "__main__":
     demo.launch()
