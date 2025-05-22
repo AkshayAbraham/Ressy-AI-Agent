@@ -28,7 +28,6 @@ When asked about skills, experience, projects, or background, respond with detai
 User: {user_input}
 Assistant:"""
 
-# Response generator
 def generate_response(user_input, chat_history=None):
     prompt = build_prompt(user_input)
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
@@ -36,7 +35,8 @@ def generate_response(user_input, chat_history=None):
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=100,
+            max_length=inputs['input_ids'].shape[1] + 150,
+            max_new_tokens=150,
             do_sample=True,
             temperature=0.7,
             top_k=50,
@@ -44,8 +44,12 @@ def generate_response(user_input, chat_history=None):
         )
 
     response = tokenizer.decode(output[0], skip_special_tokens=True)
+    print("Raw model output:", response)  # Debug print
+
+    # Make sure this matches your prompt style exactly
     cleaned_response = response.split("Assistant:")[-1].strip()
     return cleaned_response
+
 
 # Gradio interface
 iface = gr.Interface(
