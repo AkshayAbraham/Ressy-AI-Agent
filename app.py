@@ -123,7 +123,7 @@ body, .gradio-container {
     border: none;
     border-radius: 50%;
     padding: 10px;
-    width: 40px;
+    min-width: 40px;
     height: 40px;
     font-size: 16px;
     display: flex;
@@ -131,7 +131,9 @@ body, .gradio-container {
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    margin-left: 8px; /* 👈 Adds the spacing between input and send icon */
 }
+
 
 #send_button:hover {
     background-color: #357ABD !important;
