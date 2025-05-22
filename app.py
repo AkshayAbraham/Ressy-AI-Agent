@@ -1,9 +1,9 @@
 import gradio as gr
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from sentence_transformers import SentenceTransformer # NEW
-import faiss # NEW
-import numpy as np # NEW
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
 import os
 import json
 
@@ -15,8 +15,7 @@ model_name = "google/flan-t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
-# --- Embedding Model for Semantic Search (NEW) ---
-# Choose a small, efficient embedding model suitable for CPU
+# --- Embedding Model for Semantic Search ---
 embedding_model_name = "all-MiniLM-L6-v2"
 embedding_model = SentenceTransformer(embedding_model_name)
 
@@ -70,30 +69,29 @@ akshay_profile_data = {
     "value_proposition": "Akshay Abraham is a unique blend of scientific rigor and cutting-edge technical execution, consistently delivering solutions that not only meet but exceed expectations, driving efficiency and innovation."
 }
 
-# --- Prepare Documents for Semantic Search (NEW) ---
-# Create a list of all meaningful text chunks from your profile
+# --- Prepare Documents for Semantic Search ---
 document_chunks = []
 # Add summary and value proposition
-document_chunks.append(profile_data["summary"])
-document_chunks.append(profile_data["value_proposition"])
+document_chunks.append(akshay_profile_data["summary"]) # Corrected
+document_chunks.append(akshay_profile_data["value_proposition"]) # Corrected
 
 # Add core strengths
-for strength_area, description in profile_data["core_strengths"].items():
+for strength_area, description in akshay_profile_data["core_strengths"].items(): # Corrected
     document_chunks.append(f"{strength_area}: {description}")
 
 # Add key projects
-for project_name, description in profile_data["key_projects"].items():
+for project_name, description in akshay_profile_data["key_projects"].items(): # Corrected
     document_chunks.append(f"Project {project_name}: {description}")
 
 # Add technical skills (as a single chunk or individual skills)
-document_chunks.append(f"Technical Skills: {', '.join(profile_data['technical_skills'])}")
+document_chunks.append(f"Technical Skills: {', '.join(akshay_profile_data['technical_skills'])}") # Corrected
 
 # Add quantifiable achievements
-for achievement in profile_data["quantifiable_achievements"]:
+for achievement in akshay_profile_data["quantifiable_achievements"]: # Corrected
     document_chunks.append(f"Achievement: {achievement}")
 
 # Add work experience
-for job in profile_data["work_experience"]:
+for job in akshay_profile_data["work_experience"]: # Corrected
     document_chunks.append(f"Work Experience: {job['company_name']} as {job['title']} ({job['duration']}). Responsibilities: {job['responsibilities']}")
 
 # Create embeddings for all document chunks
@@ -105,7 +103,7 @@ index = faiss.IndexFlatL2(document_embeddings.shape[1]) # L2 distance for simila
 index.add(document_embeddings)
 print("FAISS index built.")
 
-# --- Retrieval Function using Semantic Search (NEW) ---
+# --- Retrieval Function using Semantic Search ---
 def retrieve_info_semantic(query, top_k=3):
     # Encode the query
     query_embedding = embedding_model.encode(query, convert_to_numpy=True)
@@ -126,7 +124,7 @@ def retrieve_info_semantic(query, top_k=3):
         
     return final_context
 
-# --- Prompt Engineering (Same as before) ---
+# --- Prompt Engineering: Aggressive "Salesperson" Persona for FLAN-T5 ---
 def build_prompt(user_input, retrieved_context):
     context_section = f"Here is relevant information about Akshay Abraham's profile:\n{retrieved_context}\n\n" if retrieved_context else ""
 
@@ -166,10 +164,10 @@ def generate_response(user_input):
         # --- Generation Parameters: Optimized for FLAN-T5's behavior ---
         output = model.generate(
             **inputs,
-            max_new_tokens=250,
-            num_beams=5,
-            do_sample=False,
-            repetition_penalty=1.3,
+            max_new_tokens=250,     # Allow for longer responses
+            num_beams=5,            # Increased beam size for more coherent output
+            do_sample=False,        # Use beam search (deterministic)
+            repetition_penalty=1.3, # Stronger penalty to reduce repetition
             early_stopping=True,
         )
 
