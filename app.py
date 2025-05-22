@@ -45,16 +45,16 @@ body, .gradio-container {
 
 /* Rounded corners and background for the chatbot display area */
 #chatbot {
-    border-radius: 15px !important; /* Adjust as needed for more/less rounded corners */
+    border-radius: 15px !important;
     background-color: #1A1A1A !important; /* Set to the same as body background */
-    overflow: hidden; /* Ensures content respects the rounded corners */
-    border: 1px solid #333333; /* Slightly lighter border for definition */
+    overflow: hidden;
+    border: 1px solid #333333;
 }
 
 /* Styling for the individual message bubbles within the chatbot */
 .gr-message-bubble {
-    border-radius: 12px !important; /* Rounded corners for message bubbles */
-    padding: 10px 15px !important; /* Adjust padding for better look */
+    border-radius: 12px !important;
+    padding: 10px 15px !important;
 }
 
 .gr-message-bubble.gr-message-user {
@@ -67,111 +67,130 @@ body, .gradio-container {
     color: white !important;
 }
 
-/* Rounded corners and background for the input textbox */
+/* Input textbox styling:  Combined input and send button */
+#input_row {
+    display: flex; /* Use flexbox to position input and button */
+    align-items: center; /* Vertically center the elements */
+    border-radius: 15px; /* Rounded corners for the entire row */
+    background-color: #2c2c2c; /* Background color for the input area */
+    border: 1px solid #555555;
+    padding-right: 5px; /* Add some padding on the right for the button */
+    margin-top: 5px; /* Add a bit of space between the chatbot and input */
+}
+
 #input_textbox {
-    border-radius: 15px !important; /* Adjust as needed */
-    background-color: #2c2c2c !important; /* Slightly lighter than chatbot for contrast */
-    border: 1px solid #555555 !important; /* Subtle border */
+    flex-grow: 1; /* Make the textbox take up remaining space */
+    border: none !important; /* Remove the textbox's individual border */
+    background-color: transparent !important; /* Make the textbox background transparent */
+    box-shadow: none !important; /* Remove any box shadow */
+    border-radius: 15px 0 0 15px !important; /* Rounded corners on the left */
 }
 
-/* Ensures the text area inside the textbox matches the background and has white text */
 #input_textbox textarea {
-    background-color: #2c2c2c !important;
+    background-color: transparent !important; /* Ensure textarea is also transparent */
     color: #FFFFFF !important; /* White text for input */
+    padding: 10px; /* Add padding inside the textarea */
 }
 
-/* Style for the submit button */
-.gr-button {
-    border-radius: 15px !important;
-    background-color: #4a90e2 !important; /* A distinct blue to stand out */
+/* Style for the send button (now inside the input row) */
+#send_button {
+    background-color: #4a90e2 !important; /* Blue send button */
     color: white !important;
     border: none !important;
+    border-radius: 0 15px 15px 0 !important; /* Rounded corners on the right */
+    padding: 10px 15px !important;
+    cursor: pointer; /* Change cursor to pointer on hover */
+    height: auto; /* Allow the button to adjust its height */
 }
 
-.gr-button:hover {
+#send_button:hover {
     background-color: #357ABD !important; /* Darker blue on hover */
 }
 
-/* Style for the Clear button */
+
+/* Hide the Clear button */
 .clear-button {
-    border-radius: 15px !important;
-    background-color: #777777 !important; /* Gray color for clear button */
-    color: white !important;
-    border: none !important;
+    display: none !important;
 }
-.clear-button:hover {
-    background-color: #555555 !important;
+
+/* Placeholder styling (mimicking Gemini) */
+#input_textbox textarea::placeholder {
+  color: #999; /* Light gray placeholder text */
+  font-style: italic; /* Italic placeholder text */
 }
 
 
-/* Adjust colors for Markdown text and labels to be visible on dark background */
-.gr-label, .gr-markdown {
-    color: #FFFFFF !important; /* Make labels and markdown text white */
-}
-
-.gr-markdown h1, .gr.markdown h2, .gr.markdown h3, .gr.markdown h4, .gr.markdown h5, .gr.markdown h6 {
-    color: #FFFFFF !important; /* Ensure headers in markdown are white */
-}
-.gr.markdown a {
-    color: #88c0d0 !important; /* Light blue for links in markdown */
-}
 """
 
-# --- Gradio UI Block ---
-# Pass the custom CSS to the gr.Blocks constructor
-with gr.Blocks(css=custom_css) as demo:
-    gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
-    gr.Markdown("""
-    ## About this Chatbot
-    This is a Retrieval-Augmented Generation (RAG) chatbot powered by AI that allows you to interactively explore Akshay Abraham's professional profile.
-    - **Technology**: Utilizes advanced semantic search and a powerful language model (via Groq API).
-    - **Purpose**: Provide detailed, context-aware answers about Akshay's professional background, skills, and achievements.
-    - **How it works**:
-        1. Your question is semantically searched against resume chunks.
-        2. Relevant excerpts are retrieved from Akshay's profile.
-        3. A language model (Llama 3 70B hosted on Groq) generates a precise, contextual response.
-    """)
+            # --- Gradio UI Block ---
+            # Pass the custom CSS to the gr.Blocks constructor
+            with gr.Blocks(css=custom_css) as demo:
+                gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
+                gr.Markdown("""
+                ## About this Chatbot
+                This is a Retrieval-Augmented Generation (RAG) chatbot powered by AI that allows you to interactively explore Akshay Abraham's professional profile.
+                - **Technology**: Utilizes advanced semantic search and a powerful language model (via Groq API).
+                - **Purpose**: Provide detailed, context-aware answers about Akshay's professional background, skills, and achievements.
+                - **How it works**:
+                    1. Your question is semantically searched against resume chunks.
+                    2. Relevant excerpts are retrieved from Akshay's profile.
+                    3. A language model (Llama 3 70B hosted on Groq) generates a precise, contextual response.
+                """)
 
-    # Give the chatbot component an ID to target it with CSS
-    chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot") # Added elem_id="chatbot"
+                # Give the chatbot component an ID to target it with CSS
+                chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
 
-    with gr.Row(equal_height=True):
-        with gr.Column(scale=10):
-            # Give the textbox component an ID to target it with CSS
-            msg = gr.Textbox(label="Ask a question about Akshay's profile", container=False, elem_id="input_textbox") # Added elem_id="input_textbox"
-        with gr.Column(scale=1):
-            submit = gr.Button(value="➤", size="sm")
-        clear = gr.ClearButton([msg, chatbot], size="sm")
+                with gr.Row(elem_id="input_row", equal_height=True):  # Added elem_id to the row
+                    with gr.Column(scale=10):
+                        # Give the textbox component an ID to target it with CSS
+                        msg = gr.Textbox(
+                            label="",  # Remove the label
+                            placeholder="Ask me anything about Akshay's profile...",  # Gemini-like placeholder
+                            container=False,
+                            elem_id="input_textbox"
+                        )
+                    with gr.Column(scale=1):
+                        submit = gr.Button(value="➤", size="sm", elem_id="send_button") # Moved inside the row, given an ID
+                #clear = gr.ClearButton([msg, chatbot], size="sm") # Removed the clear button
 
-    # Function for chatbot interaction
-    def respond(message, chat_history):
+                # Function for chatbot interaction
+                def respond(message, chat_history):
+                    """
+                    Gradio function for chatbot interaction.
+                    Args:
+                        message (str): The user's question.
+                        chat_history (list): The chat history.
+                    Returns:
+                        tuple: Updated chat history and cleared textbox
+                    """
+                    # Perform semantic search to get relevant context from resume
+                    relevant_excerpts = semantic_search(message, retriever)
+
+                    # Get the LLM response using Groq API
+                    bot_message = resume_chat_completion(
+                        client, "llama-3.3-70b-versatile", message, relevant_excerpts
+                    )
+
+                    # Append to history and return both history and empty string for textbox
+                    chat_history.append({"role": "user", "content": message})
+                    chat_history.append({"role": "assistant", "content": bot_message})
+                    return "", chat_history
+
+                # Bind submit button and textbox to the respond function
+                submit.click(respond, [msg, chatbot], [msg, chatbot])
+                msg.submit(respond, [msg, chatbot], [msg, chatbot]) # Allow submission with Enter key
+
+            # Run the Gradio app
+            if __name__ == "__main__":
+                demo.launch()
         """
-        Gradio function for chatbot interaction.
-        Args:
-            message (str): The user's question.
-            chat_history (list): The chat history.
-        Returns:
-            tuple: Updated chat history and cleared textbox
-        """
-        # Perform semantic search to get relevant context from resume
-        relevant_excerpts = semantic_search(message, retriever)
 
-        # Get the LLM response using Groq API
-        # Note: You can change the model here, e.g., "llama-3.3-8b-versatile" for smaller model,
-        # or "gemma2-9b-it" if you prefer Groq's Gemma hosting.
-        bot_message = resume_chat_completion(
-            client, "llama-3.3-70b-versatile", message, relevant_excerpts
-        )
+**Key changes in this code:**
 
-        # Append to history and return both history and empty string for textbox
-        chat_history.append({"role": "user", "content": message})
-        chat_history.append({"role": "assistant", "content": bot_message})
-        return "", chat_history
+* **CSS Syntax Error Fixed:** The invalid decimal literal has been corrected.
+* **Combined Input and Send Button:** The input textbox and the send button are now combined into a single row (`#input_row`) using flexbox for layout. This mimics the Gemini-style input.
+* **Gemini-like Placeholder:** The `msg` `gr.Textbox` now has a `placeholder` attribute, giving it the "Ask me anything..." text that disappears when the user starts typing.
+* **Clear Button Removed:** The `gr.ClearButton` has been removed.
+* **CSS Updates:** The CSS has been adjusted to style the combined input/send button area, round the corners correctly, and ensure proper spacing.
 
-    # Bind submit button and textbox to the respond function
-    submit.click(respond, [msg, chatbot], [msg, chatbot])
-    msg.submit(respond, [msg, chatbot], [msg, chatbot])
-
-# Run the Gradio app
-if __name__ == "__main__":
-    demo.launch()
+Please replace the content of your `app.py` with this code. It should now provide the Gemini-like interface you requested.
