@@ -38,23 +38,17 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS for Styling ---
 custom_css = """
-/* Overall background color for the body */
-body {
-    background-color: #333333; /* Dark gray for the overall background */
-}
-
-/* Ensure the main Gradio container itself also has a dark background */
-.gradio-container {
-    background-color: #333333;
+/* Overall background color for the body and the main Gradio container */
+body, .gradio-container {
+    background-color: #1A1A1A !important; /* A very dark gray, almost black */
 }
 
 /* Rounded corners and background for the chatbot display area */
-/* We give the gr.Chatbot component an 'elem_id="chatbot"' to target it precisely */
 #chatbot {
     border-radius: 15px !important; /* Adjust as needed for more/less rounded corners */
-    background-color: #333333 !important; /* Set to the same as body background */
+    background-color: #1A1A1A !important; /* Set to the same as body background */
     overflow: hidden; /* Ensures content respects the rounded corners */
-    border: 1px solid #444444; /* Subtle border for definition */
+    border: 1px solid #333333; /* Slightly lighter border for definition */
 }
 
 /* Styling for the individual message bubbles within the chatbot */
@@ -74,7 +68,6 @@ body {
 }
 
 /* Rounded corners and background for the input textbox */
-/* We give the gr.Textbox component an 'elem_id="input_textbox"' */
 #input_textbox {
     border-radius: 15px !important; /* Adjust as needed */
     background-color: #2c2c2c !important; /* Slightly lighter than chatbot for contrast */
@@ -100,7 +93,6 @@ body {
 }
 
 /* Style for the Clear button */
-/* Gradio typically uses a class for the clear button */
 .clear-button {
     border-radius: 15px !important;
     background-color: #777777 !important; /* Gray color for clear button */
@@ -117,10 +109,10 @@ body {
     color: #FFFFFF !important; /* Make labels and markdown text white */
 }
 
-.gr-markdown h1, .gr-markdown h2, .gr.markdown h3, .gr-markdown h4, .gr-markdown h5, .gr-markdown h6 {
+.gr-markdown h1, .gr.markdown h2, .gr.markdown h3, .gr.markdown h4, .gr.markdown h5, .gr.markdown h6 {
     color: #FFFFFF !important; /* Ensure headers in markdown are white */
 }
-.gr-markdown a {
+.gr.markdown a {
     color: #88c0d0 !important; /* Light blue for links in markdown */
 }
 """
