@@ -1,30 +1,23 @@
 import gradio as gr
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 
 # Create cache directory if it doesn't exist
 os.makedirs('.gradio/cached_examples', exist_ok=True)
 
-# --- 1. Model Choice: UPGRADE TO A MORE CAPABLE LLM ---
-# Recommended for better reasoning and generation on free tier
-# For Mistral-7B-Instruct-v0.2 (strong choice)
-
-model_name = "google/gemma-7b-it"
+# --- 1. Model Choice: Switched to Gemma 2B for Free Tier Compatibility ---
+# Gemma 2B is much smaller and can run on CPU without bitsandbytes
+model_name = "google/gemma-2b-it"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Quantization for free tier (CRUCIAL for memory and speed)
-# Use 4-bit quantization for lowest memory footprint
-quantization_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_compute_dtype=torch.float16 # Use float16 for faster computation if available
-)
-
+# Load the model in half-precision (float16) to reduce memory usage on CPU
+# This avoids the need for bitsandbytes, which requires CUDA/GPU.
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    quantization_config=quantization_config,
-    device_map="auto" # Automatically determines where to load model parts (CPU/GPU)
+    torch_dtype=torch.float16, # Use float16 for lower memory and better CPU perf
+    device_map="auto"          # Auto-assigns to available devices (CPU in free tier)
 )
 
 # Set pad_token_id for generation, especially if the tokenizer doesn't have one by default
