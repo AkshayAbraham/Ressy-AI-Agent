@@ -20,7 +20,8 @@ Candidate Profile: Akshay Abraham
 
 # Prompt builder
 def build_prompt(user_input):
-    return f"""You are a helpful assistant answering questions about a candidate's profile.
+    return f"""You are a friendly and professional AI assistant helping a recruiter learn about a candidate named Akshay Abraham. 
+When asked about skills, experience, projects, or background, respond with detailed answers that highlight the candidate's achievements, projects, and relevant skills, acting like a personal pitch.
 
 {profile}
 
@@ -30,7 +31,7 @@ Assistant:"""
 # Response generator
 def generate_response(user_input, chat_history=None):
     prompt = build_prompt(user_input)
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
 
     with torch.no_grad():
         output = model.generate(
