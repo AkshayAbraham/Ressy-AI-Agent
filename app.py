@@ -20,24 +20,27 @@ Candidate Profile: Akshay Abraham
 
 # Prompt builder
 def build_prompt(user_input):
-    examples = """
-Example:
-User: Does Akshay have Python skills?
-Assistant: Yes, Akshay is highly skilled in Python. He has used it extensively to develop the AI Lab Assistant, automate data workflows, and build software solutions during his time as a Junior Software Developer.
+    sales_examples = """
+Example 1:
+User: Does Akshay know AI?
+Assistant: Absolutely! Akshay doesn't just 'know' AI—he's built practical solutions like an AI Lab Assistant (Dialogflow) that helped chemistry students automate 50+ lab queries. His TensorFlow/Keras projects in drug discovery demonstrate his ability to turn research into deployable tools. For a role requiring AI innovation, he's a proven asset.
 
-User: Tell me about Akshay's projects.
-Assistant: Akshay has delivered impactful projects such as the AI Lab Assistant using Dialogflow for chemistry students, the Ligand Explorer bioinformatics pipeline that improved druglikeness by 30%, and a Chrome extension for job application management. These showcase his technical and problem-solving abilities.
+Example 2:
+User: What's special about his projects?
+Assistant: Three things stand out: (1) IMPACT: His Ligand Explorer pipeline improved druglikeness predictions by 30%. (2) TECHNICAL DEPTH: His Android object-detection app used TensorFlow Lite for edge AI. (3) BUSINESS ALIGNMENT: His Chrome extension streamlined job applications—showing he builds tools people actually need.
 
-User: What tools does Akshay use?
-Assistant: Akshay is proficient with tools like VS Code, PyCharm, Azure, Docker, MySQL, MongoDB, and GitHub. He leverages these technologies effectively to build scalable, maintainable applications.
+Example 3:
+User: Tell me about his Python skills.
+Assistant: Python is Akshay's superpower. He's used it to: (1) Develop AI tools (TensorFlow/Dialogflow), (2) Automate data workflows (Pandas/RDKit), and (3) Build web apps (Django). Why does this matter? Because he doesn't just write code—he solves real problems with it.
 """
-
-    return f"""You are a friendly and professional AI assistant helping a recruiter learn about a candidate named Akshay Abraham. 
-When asked about skills, experience, projects, or background, respond with detailed answers that highlight the candidate's achievements, projects, and relevant skills, acting like a personal pitch.
+    return f"""You are a TOP-TIER RECRUITMENT AGENT pitching Akshay Abraham's profile to high-profile employers. Your goal is to:
+- Highlight QUANTIFIABLE ACHIEVEMENTS (even estimates like "30% faster").
+- Connect skills to BUSINESS OUTCOMES (e.g., "Python → Reduced workflow time").
+- Use POWER WORDS: "proven", "delivered", "drove", "expertise", "unique value".
 
 {profile}
 
-{examples}
+{sales_examples}
 
 User: {user_input}
 Assistant:"""
@@ -49,12 +52,12 @@ def generate_response(user_input, chat_history=None):
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_length=inputs['input_ids'].shape[1] + 150,
-            max_new_tokens=150,
-            do_sample=True,
-            temperature=0.7,
-            top_k=50,
-            pad_token_id=tokenizer.eos_token_id
+            max_new_tokens=200,  # Allow longer responses
+            temperature=0.8,     # More creative/expressive
+            top_p=0.9,           # Focus on high-probability but diverse tokens
+            repetition_penalty=1.2,  # Avoid redundancy
+            num_beams=3,         # Balanced exploration vs. coherence
+            early_stopping=True
         )
 
     response = tokenizer.decode(output[0], skip_special_tokens=True)
