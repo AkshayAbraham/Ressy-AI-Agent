@@ -9,9 +9,8 @@ os.makedirs('.gradio/cached_examples', exist_ok=True)
 # --- 1. Model Choice: UPGRADE TO A MORE CAPABLE LLM ---
 # Recommended for better reasoning and generation on free tier
 # For Mistral-7B-Instruct-v0.2 (strong choice)
-model_name = "mistralai/Mistral-7B-Instruct-v0.2"
-# For Gemma-7B-it (also good, try if Mistral is too heavy)
-# model_name = "google/gemma-7b-it"
+
+model_name = "google/gemma-7b-it"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
