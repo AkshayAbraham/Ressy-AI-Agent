@@ -161,8 +161,22 @@ body, .gradio-container {
 }
 """
 
+# JavaScript for loading spinner
+loading_js = """
+function toggleLoading(start) {
+    const btn = document.getElementById('send_button');
+    if (start) {
+        btn.classList.add('loading');
+        btn.innerHTML = '';
+    } else {
+        btn.classList.remove('loading');
+        btn.innerHTML = '➤';
+    }
+}
+"""
+
 # --- Gradio UI Block ---
-with gr.Blocks(css=custom_css) as demo:
+with gr.Blocks(css=custom_css, js=loading_js) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
     gr.Markdown("""
     ## About this Chatbot
@@ -176,6 +190,7 @@ with gr.Blocks(css=custom_css) as demo:
     """)
 
     chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
+    loading_state = gr.State(False)  # To track loading state
 
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
@@ -188,21 +203,10 @@ with gr.Blocks(css=custom_css) as demo:
         )
         submit = gr.Button("➤", elem_id="send_button")
 
-    def respond(message, chat_history):
-        """
-        Gradio function for chatbot interaction.
-        Args:
-            message (str): The user's question.
-            chat_history (list): The chat history.
-        Returns:
-            tuple: Updated chat history and cleared textbox
-        """
-        # Add loading class to button
-        submit_js = """
-        document.getElementById('send_button').classList.add('loading');
-        document.getElementById('send_button').innerHTML = '';
-        """
-        submit.click(None, None, None, _js=submit_js)
+    def respond(message, chat_history, loading_state):
+        # Start loading
+        loading_state = True
+        yield {"__type__": "update", "visible": False}, chat_history, loading_state
         
         # Perform semantic search to get relevant context from resume
         relevant_excerpts = semantic_search(message, retriever)
@@ -212,20 +216,35 @@ with gr.Blocks(css=custom_css) as demo:
             client, "llama-3.3-70b-versatile", message, relevant_excerpts
         )
 
-        # Remove loading class from button
-        submit_js = """
-        document.getElementById('send_button').classList.remove('loading');
-        document.getElementById('send_button').innerHTML = '➤';
-        """
-        submit.click(None, None, None, _js=submit_js)
-
-        # Append to history and return both history and empty string for textbox
+        # Append to history
         chat_history.append({"role": "user", "content": message})
         chat_history.append({"role": "assistant", "content": bot_message})
-        return "", chat_history
+        
+        # End loading
+        loading_state = False
+        yield {"__type__": "update", "visible": True}, chat_history, loading_state
 
-    submit.click(respond, [msg, chatbot], [msg, chatbot])
-    msg.submit(respond, [msg, chatbot], [msg, chatbot])
+    submit.click(
+        fn=respond,
+        inputs=[msg, chatbot, loading_state],
+        outputs=[submit, chatbot, loading_state],
+        api_name="chat"
+    )
+    
+    # Additional JS to handle loading state changes
+    loading_state.change(
+        None,
+        inputs=[loading_state],
+        outputs=None,
+        js="(loading) => toggleLoading(loading)"
+    )
+
+    msg.submit(
+        fn=respond,
+        inputs=[msg, chatbot, loading_state],
+        outputs=[submit, chatbot, loading_state],
+        api_name="chat_enter"
+    )
 
 # Run the Gradio app
 if __name__ == "__main__":
