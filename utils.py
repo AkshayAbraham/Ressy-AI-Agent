@@ -70,7 +70,7 @@ def resume_chat_completion(client, model, user_question, relevant_excerpts):
                 "role": "user",
                 "content": "User Question: "
                 + user_question
-                + "\n Relevant Kacem's Resume/CV Exerpt(s): \n"
+                + "\n Relevant Akshay's Resume/CV Exerpt(s): \n"
                 + relevant_excerpts,
             },
         ],
