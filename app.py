@@ -1,43 +1,36 @@
 import gradio as gr
 import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM # These imports are not used with Groq, but were in original code. Can be removed if not needed elsewhere.
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from langchain.vectorstores import Chroma
-from utils import (    # Import functions from your utils.py
+from utils import (
     load_text_data,
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
 )
 import os
-from groq import Groq # Import the Groq client
-from dotenv import load_dotenv # To load .env if running locally, useful to keep
+from groq import Groq
+from dotenv import load_dotenv
 
-# Create cache directory if it doesn't exist (useful for Gradio caching)
+# Create cache directory if it doesn't exist
 os.makedirs('.gradio/cached_examples', exist_ok=True)
 
 # --- Setup Embedding Model ---
-# Using a robust embedding model for semantic search
 embedding_model = setup_embedding_model(model_name="sentence-transformers/all-mpnet-base-v2")
 
 # --- Load Text Data and Chunking ---
 my_resume = load_text_data("data/resume.txt")
-# Chunking the text data by "---" delimiter (as per your resume.txt structure)
 chunks = [chunk.strip() for chunk in my_resume.split("---") if chunk.strip()]
 
 # --- Create a Chroma database ---
-# This builds your RAG knowledge base from the chunks and their embeddings
 db = Chroma.from_texts(chunks, embedding_model)
-# Configure retriever to get top 3 most similar chunks
 retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
 # --- Setting up the LLM (Groq API) ---
-# Load environment variables (for local testing; Hugging Face Spaces picks up secrets automatically)
 load_dotenv()
-# Initialize Groq client with your API key from environment variables
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS for Styling ---
-
 custom_css = """
 /* Overall background color for the body and the main Gradio container */
 body, .gradio-container {
@@ -73,9 +66,9 @@ body, .gradio-container {
     color: white !important;
 }
 
-/* Gemini-style input row - modified to contain both input and button */
+/* Input row container */
 #input_row {
-    position: relative; /* Needed for absolute positioning of button */
+    position: relative;
     display: flex;
     align-items: center;
     background-color: #2C2C2C;
@@ -91,7 +84,7 @@ body, .gradio-container {
     border-color: #4a90e2;
 }
 
-/* Input textbox - modified to allow space for button */
+/* Input textbox */
 #input_textbox {
     flex-grow: 1;
     border: none !important;
@@ -99,8 +92,8 @@ body, .gradio-container {
     color: #fff !important;
     font-size: 15px;
     padding-left: 12px;
-    padding-right: 50px; /* 👈 Make space for the send button */
-    margin-right: -40px; /* 👈 Pull the button into this space */
+    padding-right: 50px;
+    margin-right: -40px;
 }
 
 #input_textbox textarea {
@@ -111,16 +104,16 @@ body, .gradio-container {
     outline: none;
     padding: 12px 0;
     font-family: 'Segoe UI', sans-serif;
-    width: calc(100% - 20px); /* 👈 Adjust width to account for button */
+    width: calc(100% - 20px);
 }
 
-/* Placeholder like Gemini */
+/* Placeholder */
 #input_textbox textarea::placeholder {
     color: #aaa;
     font-style: italic;
 }
 
-/* Send button - positioned absolutely inside the input */
+/* Send button */
 #send_button {
     position: absolute;
     right: 8px;
@@ -150,7 +143,6 @@ body, .gradio-container {
 """
 
 # --- Gradio UI Block ---
-# Ensure this 'with' block is at the top level of indentation (no leading spaces)
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
     gr.Markdown("""
@@ -164,22 +156,17 @@ with gr.Blocks(css=custom_css) as demo:
         3. A language model (Llama 3 70B hosted on Groq) generates a precise, contextual response.
     """)
 
-    # Give the chatbot component an ID to target it with CSS
     chatbot = gr.Chatbot(type="messages", height=400, elem_id="chatbot")
 
-    # This gr.Row contains the textbox and the send button
     with gr.Row(elem_id="input_row", equal_height=True):
-    msg = gr.Textbox(
-        label="",
-        placeholder="Ask me anything about Akshay's profile...",
-        container=False,
-        elem_id="input_textbox"
-    )
-    submit = gr.Button(value="➤", size="sm", elem_id="send_button")
-    # The clear button is intentionally removed from here
-    # clear = gr.ClearButton([msg, chatbot], size="sm")
+        msg = gr.Textbox(
+            label="",
+            placeholder="Ask me anything about Akshay's profile...",
+            container=False,
+            elem_id="input_textbox"
+        )
+        submit = gr.Button(value="➤", size="sm", elem_id="send_button")
 
-    # Function for chatbot interaction
     def respond(message, chat_history):
         """
         Gradio function for chatbot interaction.
@@ -202,11 +189,9 @@ with gr.Blocks(css=custom_css) as demo:
         chat_history.append({"role": "assistant", "content": bot_message})
         return "", chat_history
 
-    # Bind submit button and textbox to the respond function
     submit.click(respond, [msg, chatbot], [msg, chatbot])
-    msg.submit(respond, [msg, chatbot], [msg, chatbot]) # Allow submission with Enter key
+    msg.submit(respond, [msg, chatbot], [msg, chatbot])
 
 # Run the Gradio app
 if __name__ == "__main__":
     demo.launch()
-
