@@ -55,11 +55,11 @@ def resume_chat_completion(client, model, user_question, relevant_excerpts):
     """
     # Define the system prompt
     system_prompt = """
-    You are an intelligent assistant designed to answer queries about Kacem Mathlouthi's professional background and experiences based on his resume.
+    You are an intelligent assistant designed to answer queries about Akshay Abraham's professional background and experiences based on his resume.
     Guidelines for generating responses:
     - Only use information directly found in the provided resume excerpts.
     - If the information is incomplete or ambiguous in the excerpts, inform the user that you lack sufficient data to answer.
-    - If a user asks a general or unrelated question (e.g., about something that isn't part of the resume), you should politely indicate that you can only respond related to Kacem's resume.
+    - If a user asks a general or unrelated question (e.g., about something that isn't part of the resume), you should politely indicate that you can only respond related to Akshay's resume.
     Please ensure that your answers are factual and reflect only the information available in the resume. Do not provide opinions or speculate beyond what is provided in the document.
     """
     # Generate a response to the user's question using the pre-trained model
