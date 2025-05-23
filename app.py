@@ -33,11 +33,14 @@ body, .gradio-container {
     color: white;
 }
 
-/* Hide all loading indicators */
-.progress-bar, .animate-spin, .processing-time, [data-testid="progress-bar"], .clear-button {
+/* Completely hide all progress indicators */
+.progress-bar, .animate-spin, .processing-time, 
+[data-testid="progress-bar"], .progress, 
+.spinner, .loading, .clear-button {
     display: none !important;
     height: 0 !important;
     visibility: hidden !important;
+    opacity: 0 !important;
 }
 
 /* Chat container */
@@ -48,14 +51,15 @@ body, .gradio-container {
     padding: 0 !important;
 }
 
-/* Intro section */
+/* Intro section - transparent background */
 #intro_container {
     text-align: center;
     margin-top: 20px;
     color: #ccc;
-    background: none !important;
+    background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
 }
 
 #intro_image {
@@ -67,8 +71,9 @@ body, .gradio-container {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    border: none !important;
+    background: transparent !important;
 }
-
 
 /* Message bubbles */
 .gr-message-bubble {
@@ -198,14 +203,29 @@ with gr.Blocks(css=custom_css) as demo:
     # 📤 Handle response
     def respond(message, chat_history):
         relevant_excerpts = semantic_search(message, retriever)
-        bot_message = resume_chat_completion(client, "llama-3.3-70b-versatile", message, relevant_excerpts)
+        bot_message = resume_chat_completion(
+            client, 
+            "llama-3.3-70b-versatile", 
+            message, 
+            relevant_excerpts
+        )
         chat_history.append({"role": "user", "content": message})
         chat_history.append({"role": "assistant", "content": bot_message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
-    # 📩 Bind button & Enter key
-    submit.click(respond, [msg, chatbot], [msg, chatbot, intro_section, chatbot])
-    msg.submit(respond, [msg, chatbot], [msg, chatbot, intro_section, chatbot])
+    # 📩 Bind button & Enter key (with progress bar hidden)
+    submit.click(
+        respond, 
+        [msg, chatbot], 
+        [msg, chatbot, intro_section, chatbot],
+        show_progress=False
+    )
+    msg.submit(
+        respond, 
+        [msg, chatbot], 
+        [msg, chatbot, intro_section, chatbot],
+        show_progress=False
+    )
 
 # 🚀 Launch
 if __name__ == "__main__":
