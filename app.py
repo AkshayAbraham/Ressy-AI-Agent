@@ -12,14 +12,17 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 
+# Create cache directory
 os.makedirs('.gradio/cached_examples', exist_ok=True)
 
+# --- Load Models & Data ---
 embedding_model = setup_embedding_model(model_name="sentence-transformers/all-mpnet-base-v2")
 my_resume = load_text_data("data/resume.txt")
 chunks = [chunk.strip() for chunk in my_resume.split("---") if chunk.strip()]
 db = Chroma.from_texts(chunks, embedding_model)
 retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
+# --- Setup LLM (Groq) ---
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -30,6 +33,14 @@ body, .gradio-container {
     color: white;
 }
 
+/* Hide all loading indicators */
+.progress-bar, .animate-spin, .processing-time, [data-testid="progress-bar"], .clear-button {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Chat container */
 #chatbot {
     background-color: #1A1A1A !important;
     border: none !important;
@@ -37,18 +48,21 @@ body, .gradio-container {
     padding: 0 !important;
 }
 
+/* Intro section */
 #intro_container {
     text-align: center;
     margin-top: 20px;
     color: #ccc;
 }
 
+/* Intro image */
 #intro_image {
     width: 120px;
     border-radius: 50%;
     margin-bottom: 12px;
 }
 
+/* Message bubbles */
 .gr-message-bubble {
     border-radius: 16px !important;
     padding: 12px 16px !important;
@@ -67,6 +81,7 @@ body, .gradio-container {
     color: white !important;
 }
 
+/* Input container */
 #input_container {
     position: relative;
     background-color: #2C2C2C;
@@ -81,6 +96,7 @@ body, .gradio-container {
     border-color: #4a90e2;
 }
 
+/* Input box */
 #input_textbox {
     width: 100%;
     border: none !important;
@@ -110,6 +126,7 @@ body, .gradio-container {
     font-style: italic;
 }
 
+/* Send button */
 #send_button {
     position: absolute !important;
     right: 8px !important;
@@ -132,28 +149,33 @@ body, .gradio-container {
 #send_button:hover {
     background-color: #357ABD !important;
 }
-
-.progress-bar, .animate-spin, .processing-time, [data-testid="progress-bar"], .clear-button {
-    display: none !important;
-}
 """
 
+# --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
 
-    # 📸 Intro Section (shown initially only)
+    # 🌟 Intro (shown first)
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
-        gr.Image(value="data/avatar.png", elem_id="intro_image", show_label=False, show_download_button=False)
+        gr.Image(
+            value="data/avatar.png",
+            elem_id="intro_image",
+            show_label=False,
+            show_download_button=False,
+            show_fullscreen_button=False,
+            show_share_button=False,
+            interactive=False
+        )
         gr.Markdown("""
         Welcome to the Resume Chatbot for **Akshay Abraham**!  
         Ask me anything about Akshay's career, skills, or experiences.  
         Just type below and hit send.
         """)
 
-    # 🤖 Chatbot (hidden initially)
+    # 🤖 Chatbot (initially hidden)
     chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
 
-    # 💬 Input Section (always visible)
+    # 💬 Input area (always visible)
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
@@ -165,6 +187,7 @@ with gr.Blocks(css=custom_css) as demo:
         )
         submit = gr.Button("➤", elem_id="send_button")
 
+    # 📤 Handle response
     def respond(message, chat_history):
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(client, "llama-3.3-70b-versatile", message, relevant_excerpts)
@@ -172,9 +195,10 @@ with gr.Blocks(css=custom_css) as demo:
         chat_history.append({"role": "assistant", "content": bot_message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
-    # Bind click and enter key to `respond`, and toggle intro/chat visibility
+    # 📩 Bind button & Enter key
     submit.click(respond, [msg, chatbot], [msg, chatbot, intro_section, chatbot])
     msg.submit(respond, [msg, chatbot], [msg, chatbot, intro_section, chatbot])
 
+# 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
