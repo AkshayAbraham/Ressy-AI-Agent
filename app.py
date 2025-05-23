@@ -1,6 +1,4 @@
 import gradio as gr
-import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from langchain.vectorstores import Chroma
 from utils import (
     load_text_data,
@@ -41,19 +39,18 @@ body, .gradio-container {
     display: none !important;
 }
 
-/* Animated GIF container */
-#robot_gif {
-    width: 200px;
-    height: 200px;
-    margin: 0 auto 20px auto;
-    object-fit: contain;
-    animation: float 4s ease-in-out infinite;
+/* Lottie container styling */
+#lottie_container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 auto;
+    width: 250px !important;
+    height: 250px !important;
 }
 
-/* Floating animation */
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
+dotlottie-player {
+    background-color: #1A1A1A !important;
 }
 
 /* Chatbot container */
@@ -169,21 +166,25 @@ body, .gradio-container {
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
 
-    # 🤖 Animated GIF Intro
+    # 🤖 Lottie Animation Intro
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
-        gr.Image(
-            value="data/Animation.gif",
-            elem_id="robot_gif",
-            show_label=False,
-            show_download_button=False,
-            show_fullscreen_button=False,
-            show_share_button=False,
-            interactive=False
-        )
+        gr.HTML("""
+        <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+        <div id="lottie_container">
+            <dotlottie-player
+                src="https://lottie.host/3a69db62-ac6b-419d-8949-79fe213690c8/QJbL66mr48.lottie"
+                background="transparent"
+                speed="1"
+                style="width: 100%; height: 100%"
+                loop
+                autoplay>
+            </dotlottie-player>
+        </div>
+        """)
         gr.Markdown("""
         <div style='animation: fadeIn 0.8s ease-out;'>
         Hello! I'm your AI assistant 🤖<br>
-        Ask me anything about Akshay's professional background!
+        Ready to explore Akshay's professional background!
         </div>
         """)
 
