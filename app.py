@@ -1,6 +1,4 @@
 import gradio as gr
-import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from langchain.vectorstores import Chroma
 from utils import (
     load_text_data,
@@ -26,120 +24,121 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# --- Custom CSS ---
+# --- Custom CSS with Animations ---
 custom_css = """
 body, .gradio-container {
     background-color: #1A1A1A !important;
     color: white;
+    font-family: 'Segoe UI', sans-serif;
 }
 
-/* Completely hide all progress indicators */
+/* Hide all loading indicators */
 .progress-bar, .animate-spin, .processing-time, 
 [data-testid="progress-bar"], .progress, 
 .spinner, .loading, .clear-button {
     display: none !important;
-    height: 0 !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
 }
 
-/* Chat container */
+/* Animated icon container */
+#animated_icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px auto;
+    position: relative;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Chatbot container */
 #chatbot {
     background-color: #1A1A1A !important;
     border: none !important;
-    box-shadow: none !important;
     padding: 0 !important;
+    transition: opacity 0.3s ease;
 }
 
-/* Intro section - transparent background */
+/* Intro section */
 #intro_container {
     text-align: center;
-    margin-top: 20px;
-    color: #ccc;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
+    margin: 20px auto;
+    max-width: 500px;
+    animation: fadeIn 0.5s ease-out;
 }
 
-#intro_image {
-    width: 120px;
-    height: auto;
-    border-radius: 50%;
-    margin-bottom: 12px;
-    object-fit: contain !important;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    border: none !important;
-    background: transparent !important;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Message bubbles */
+/* Message bubbles with smooth appearance */
 .gr-message-bubble {
     border-radius: 16px !important;
     padding: 12px 16px !important;
     font-size: 15px;
-    font-family: 'Segoe UI', sans-serif;
+    margin: 8px 0;
+    opacity: 0;
+    animation: messageAppear 0.3s forwards;
+    max-width: 80%;
+}
+
+@keyframes messageAppear {
+    to { opacity: 1; }
 }
 
 .gr-message-user {
     background-color: #007BFF !important;
     color: white !important;
     align-self: flex-end;
+    animation-delay: 0.1s;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
+    animation-delay: 0.2s;
 }
 
-/* Input container */
+/* Input container with focus animation */
 #input_container {
     position: relative;
     background-color: #2C2C2C;
     border: 1px solid #444;
     border-radius: 25px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    transition: border 0.2s ease;
+    margin: 20px auto;
+    max-width: 600px;
+    transition: all 0.3s ease;
 }
 
 #input_container:focus-within {
     border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 /* Input box */
 #input_textbox {
     width: 100%;
     border: none !important;
-    background-color: transparent !important;
+    background: transparent !important;
     color: #fff !important;
-    font-size: 15px;
     padding: 12px 50px 12px 15px !important;
     min-height: 20px !important;
-    box-shadow: none !important;
 }
 
 #input_textbox textarea {
-    background-color: transparent !important;
-    color: white !important;
+    background: transparent !important;
     resize: none !important;
     border: none !important;
     outline: none !important;
     padding: 0 !important;
-    font-family: 'Segoe UI', sans-serif;
     margin: 0 !important;
-    min-height: 20px !important;
-    max-height: 120px !important;
 }
 
-#input_textbox textarea::placeholder {
-    color: #aaa;
-    font-style: italic;
-}
-
-/* Send button */
+/* Send button with pulse animation */
 #send_button {
     position: absolute !important;
     right: 8px !important;
@@ -151,44 +150,59 @@ body, .gradio-container {
     border-radius: 50% !important;
     width: 36px !important;
     height: 36px !important;
-    padding: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    transition: background-color 0.2s ease !important;
+    transition: all 0.2s ease !important;
 }
 
 #send_button:hover {
     background-color: #357ABD !important;
+    transform: translateY(-50%) scale(1.1) !important;
 }
+"""
+
+# SVG for animated icon (can be replaced with any SVG)
+animated_icon_svg = """
+<svg id="animated_icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .ai-circle { fill: #4a90e2; }
+        .ai-gear { 
+            fill: none; 
+            stroke: #fff; 
+            stroke-width: 1.5; 
+            stroke-linecap: round;
+            transform-origin: center;
+            animation: spin 6s linear infinite;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <circle class="ai-circle" cx="12" cy="12" r="10"/>
+    <path class="ai-gear" d="M12 6v2m0 8v2m4-8h2m-8 0H6m9.3-3.3l-1.4 1.4m-7.8 7.8l-1.4 1.4m9.9-7.8l1.4 1.4m-7.8 7.8l1.4 1.4"/>
+</svg>
 """
 
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
 
-    # 🌟 Intro (shown first)
+    # 🌟 Animated Intro Section
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
-        gr.Image(
-            value="data/avatar.png",
-            elem_id="intro_image",
-            show_label=False,
-            show_download_button=False,
-            show_fullscreen_button=False,
-            show_share_button=False,
-            interactive=False
-        )
+        gr.HTML(animated_icon_svg)
         gr.Markdown("""
-        Welcome to the Resume Chatbot for **Akshay Abraham**!  
-        Ask me anything about Akshay's career, skills, or experiences.  
-        Just type below and hit send.
+        <div style='animation: fadeIn 0.8s ease-out;'>
+        Welcome to the Resume Chatbot for <strong>Akshay Abraham</strong>!<br>
+        Ask me anything about Akshay's career, skills, or experiences.
+        </div>
         """)
 
-    # 🤖 Chatbot (initially hidden)
+    # 🤖 Chatbot
     chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
 
-    # 💬 Input area (always visible)
+    # 💬 Input area
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
@@ -213,7 +227,7 @@ with gr.Blocks(css=custom_css) as demo:
         chat_history.append({"role": "assistant", "content": bot_message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
-    # 📩 Bind button & Enter key (with progress bar hidden)
+    # 📩 Bind interactions
     submit.click(
         respond, 
         [msg, chatbot], 
