@@ -53,14 +53,22 @@ body, .gradio-container {
     text-align: center;
     margin-top: 20px;
     color: #ccc;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-/* Intro image */
 #intro_image {
     width: 120px;
+    height: auto;
     border-radius: 50%;
     margin-bottom: 12px;
+    object-fit: contain !important;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 
 /* Message bubbles */
 .gr-message-bubble {
