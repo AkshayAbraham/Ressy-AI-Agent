@@ -18,7 +18,7 @@ embedding_model = setup_embedding_model(model_name="sentence-transformers/all-mp
 my_resume = load_text_data("data/resume.txt")
 chunks = [chunk.strip() for chunk in my_resume.split("---") if chunk.strip()]
 db = Chroma.from_texts(chunks, embedding_model)
-retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
 # --- Setup LLM (Groq) ---
 load_dotenv()
