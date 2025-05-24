@@ -51,8 +51,8 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto;
-    width: 250px !important;
-    height: 250px !important;
+    width: 200px !important;
+    height: 200px !important;
 }
 
 dotlottie-player {
@@ -180,7 +180,38 @@ button[aria-label="Scroll to bottom"] {
 
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
-    gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
+    gr.HTML("""
+<div style="display: flex; justify-content: flex-end; gap: 15px; padding: 10px 20px;">
+    <!-- Info Icon -->
+    <button id="info_icon" title="About Agent" style="background: none; border: none; cursor: pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="#fff" height="24" width="24" viewBox="0 0 24 24">
+            <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+        </svg>
+    </button>
+
+    <!-- Download Icon -->
+    <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download style="background: none; border: none; cursor: pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="#fff" height="24" width="24" viewBox="0 0 24 24">
+            <path d="M5 20h14v-2H5v2zm7-18L5.33 9h3.84v4h5.66v-4h3.84L12 2z"/>
+        </svg>
+    </a>
+</div>
+
+<!-- Info Modal -->
+<div id="info_modal" style="display:none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #2C2C2C; color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.4); z-index: 9999;">
+    <h3>About This Agent</h3>
+    <p>This chatbot is powered by LLM + RAG to answer questions about Akshay Abraham's professional background. Ask anything from work experience to technical skills!</p>
+    <button onclick="document.getElementById('info_modal').style.display='none'" style="margin-top: 10px; background-color: #007BFF; color: white; border: none; padding: 8px 12px; border-radius: 6px;">Close</button>
+</div>
+
+<script>
+    // Show info modal on icon click
+    document.getElementById('info_icon').onclick = () => {
+        document.getElementById('info_modal').style.display = 'block';
+    };
+</script>
+""")
+
 
     # 🤖 Lottie Animation Intro
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
