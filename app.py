@@ -26,8 +26,9 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS ---
 custom_css = """
-body, .gradio-container,.dark {
-    background-color: #1A1A1A !important;  /* Dark charcoal */
+/* Main Background */
+body, .gradio-container, .dark {
+    background-color: #1A1A1A !important;
     color: white;
     font-family: 'Segoe UI', sans-serif;
 }
@@ -38,14 +39,26 @@ body, .gradio-container,.dark {
     background: transparent !important;
 }
 
-/* Hide all loading indicators */
-.progress-bar, .animate-spin, .processing-time, 
-[data-testid="progress-bar"], .progress, 
-.spinner, .loading, .clear-button {
-    display: none !important;
+/* Loading Animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-/* Lottie container styling */
+#loading_icon {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(74, 144, 226, 0.3);
+    border-radius: 50%;
+    border-top-color: #4a90e2;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+}
+
+/* Lottie container */
 #lottie_container {
     background: transparent !important;
     border: none !important;
@@ -55,35 +68,16 @@ body, .gradio-container,.dark {
     height: 250px !important;
 }
 
-dotlottie-player {
-    background-color: #1A1A1A !important;
-}
-
-/* Chatbot container */
+/* Chat Interface */
 #chatbot {
     background-color: #1A1A1A !important;
     border: none !important;
     padding: 0 !important;
-    transition: opacity 0.3s ease;
-    scrollbar-width: none !important; /* Firefox */
-    -ms-overflow-style: none !important; /* IE/Edge */
-    box-shadow: none !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
 }
 
-/* Intro section */
-#intro_container {
-    text-align: center;
-    margin: 20px auto;
-    max-width: 500px;
-    animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Message bubbles */
+/* Message Bubbles */
 .gr-message-bubble {
     border-radius: 16px !important;
     padding: 12px 16px !important;
@@ -94,30 +88,18 @@ dotlottie-player {
     max-width: 80%;
 }
 
-@keyframes messageAppear {
-    to { opacity: 1; }
-}
-
 .gr-message-user {
     background-color: #007BFF !important;
     color: white !important;
     align-self: flex-end;
-    animation-delay: 0.1s;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
-    animation-delay: 0.2s;
 }
 
-.gr-messages {
-    background-color: transparent !important;
-    border: none !important;
-    gap: 12px !important;  /* Message spacing */
-}
-
-/* Input container */
+/* Input Container */
 #input_container {
     position: relative;
     background-color: #2C2C2C;
@@ -125,55 +107,30 @@ dotlottie-player {
     border-radius: 25px;
     margin: 20px auto;
     max-width: 600px;
-    transition: all 0.3s ease;
 }
 
-#input_container:focus-within {
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-}
-
-/* Input box */
-#input_textbox {
-    width: 100%;
-    border: none !important;
-    background: transparent !important;
-    color: #fff !important;
-    padding: 12px 50px 12px 15px !important;
-    min-height: 20px !important;
-}
-
-#input_textbox textarea {
-    background: transparent !important;
-    resize: none !important;
-    border: none !important;
-    outline: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* Send button */
+/* Send Button */
 #send_button {
-    position: absolute !important;
-    right: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background-color: #4a90e2 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 50% !important;
-    width: 36px !important;
-    height: 36px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 #send_button:hover {
-    background-color: #357ABD !important;
-    transform: translateY(-50%) scale(1.1) !important;
+    background-color: #357ABD;
+    transform: translateY(-50%) scale(1.1);
 }
 """
 
@@ -181,7 +138,7 @@ dotlottie-player {
 with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
 
-    # 🤖 Lottie Animation Intro
+    # Lottie Animation
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
         gr.HTML("""
         <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
@@ -203,10 +160,8 @@ with gr.Blocks(css=custom_css) as demo:
         </div>
         """)
 
-    # 💬 Chatbot
     chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
 
-    # ⌨️ Input area
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
@@ -216,10 +171,15 @@ with gr.Blocks(css=custom_css) as demo:
             lines=1,
             max_lines=5
         )
-        submit = gr.Button("➤", elem_id="send_button")
+        with gr.Row():
+            submit = gr.Button("➤", elem_id="send_button", visible=True)
+            loading_icon = gr.HTML("<div id='loading_icon'></div>", visible=False)
 
-    # 📤 Response handler
     def respond(message, chat_history):
+        # Clear input and show loading immediately
+        yield "", chat_history, gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=True)
+        
+        # Process message
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(
             client, 
@@ -227,24 +187,25 @@ with gr.Blocks(css=custom_css) as demo:
             message, 
             relevant_excerpts
         )
+        
+        # Update chat and restore UI
         chat_history.append({"role": "user", "content": message})
         chat_history.append({"role": "assistant", "content": bot_message})
-        return "", chat_history, gr.update(visible=False), gr.update(visible=True)
+        yield "", chat_history, gr.update(visible=False), gr.update(visible=True), gr.update(visible=True), gr.update(visible=False)
 
-    # 📩 Bind interactions
+    # Bind interactions
     submit.click(
-        respond, 
-        [msg, chatbot], 
-        [msg, chatbot, intro_section, chatbot],
-        show_progress=False
+        respond,
+        [msg, chatbot],
+        [msg, chatbot, intro_section, chatbot, submit, loading_icon],
+        queue=False
     )
     msg.submit(
-        respond, 
-        [msg, chatbot], 
-        [msg, chatbot, intro_section, chatbot],
-        show_progress=False
+        respond,
+        [msg, chatbot],
+        [msg, chatbot, intro_section, chatbot, submit, loading_icon],
+        queue=False
     )
 
-# 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
