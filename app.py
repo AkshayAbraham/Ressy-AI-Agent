@@ -291,7 +291,8 @@ with gr.Blocks(css=custom_css) as demo:
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0,0,0,0.4);
         z-index: 9999;
-        max-width: 400px;
+        max-width: 600px; /* Increased max-width for wider modal */
+        width: 90%; /* Added a percentage width for responsiveness */
         max-height: 80vh; /* Set a max height relative to viewport height */
         overflow-y: auto; /* Enable internal scrolling if content overflows */
         box-sizing: border-box; /* Include padding in height calculation */
@@ -344,16 +345,16 @@ with gr.Blocks(css=custom_css) as demo:
 <div id="info_modal">
     <h3>About Your AI Resume Assistant: Ressy 🤖</h3>
     <p>
-        **Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey!** 👋
+        Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
         Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
         <br><br>
-        **What can I help you discover?** 💡
+        What can I help you discover? 💡
         <ul>
-            <li>**Skills Deep Dive:** Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
-            <li>**Project Showcase:** Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
-            <li>**Experience & Impact:** Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
-            <li>**Career Trajectory:** Understand his career path and future aspirations. 🌟</li>
+            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
+            <li>Project Showcase: Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
+            <li>Experience & Impact: Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
+            <li>Career Trajectory: Understand his career path and future aspirations. 🌟</li>
         </ul>
         Think of me as your dedicated, instant, and interactive resume reader. I'm here to streamline your search for information, making it easier to see how Akshay's background aligns with your needs. 🎯
         <br><br>
