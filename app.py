@@ -26,48 +26,87 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS ---
 custom_css = """
-/* MAIN BACKGROUND */
-body, .gradio-container, .dark, #chatbot {
+body, .gradio-container {
     background-color: #1A1A1A !important;
     color: white;
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* Hide scrollbars */
+/* Hide Scrollbars */
 #chatbot::-webkit-scrollbar {
+    width: 0 !important;
+    background: transparent !important;
+
+/* Hide all loading indicators */
+.progress-bar, .animate-spin, .processing-time, 
+[data-testid="progress-bar"], .progress, 
+.spinner, .loading, .clear-button {
     display: none !important;
 }
-#chatbot {
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
-}
 
-/* Lottie container */
+/* Lottie container styling */
 #lottie_container {
     background: transparent !important;
     border: none !important;
+    box-shadow: none !important;
     margin: 0 auto;
     width: 250px !important;
     height: 250px !important;
 }
 
-/* Chat interface */
+dotlottie-player {
+    background-color: #1A1A1A !important;
+}
+
+/* Chatbot container */
 #chatbot {
+    background-color: #1A1A1A !important;
     border: none !important;
     padding: 0 !important;
-    margin: 0 !important;
+    transition: opacity 0.3s ease;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+/* Intro section */
+#intro_container {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 500px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Message bubbles */
+.gr-message-bubble {
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    font-size: 15px;
+    margin: 8px 0;
+    opacity: 0;
+    animation: messageAppear 0.4s forwards;
+    max-width: 80%;
+}
+
+@keyframes messageAppear {
+    to { opacity: 1; }
+}
+
 .gr-message-user {
     background-color: #007BFF !important;
     color: white !important;
     align-self: flex-end;
+    animation-delay: 0.1s;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
+    animation-delay: 0.2s;
 }
 
 /* Input container */
@@ -78,6 +117,12 @@ body, .gradio-container, .dark, #chatbot {
     border-radius: 25px;
     margin: 20px auto;
     max-width: 600px;
+    transition: all 0.3s ease;
+}
+
+#input_container:focus-within {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 /* Input box */
@@ -87,6 +132,16 @@ body, .gradio-container, .dark, #chatbot {
     background: transparent !important;
     color: #fff !important;
     padding: 12px 50px 12px 15px !important;
+    min-height: 20px !important;
+}
+
+#input_textbox textarea {
+    background: transparent !important;
+    resize: none !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Send button */
@@ -101,75 +156,87 @@ body, .gradio-container, .dark, #chatbot {
     border-radius: 50% !important;
     width: 36px !important;
     height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
 }
-"""
 
-# --- JavaScript for auto-scrolling ---
-js = """
-function scrollToBottom() {
-    const chatbot = document.querySelector('#chatbot');
-    chatbot.scrollTop = chatbot.scrollHeight;
-    return [];
+#send_button:hover {
+    background-color: #357ABD !important;
+    transform: translateY(-50%) scale(1.1) !important;
 }
 """
 
 # --- Gradio UI ---
-with gr.Blocks(css=custom_css, js=js) as demo:
+with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("# Akshay Abraham Resume RAG Chatbot")
 
-    # Lottie Animation Intro
+    # 🤖 Lottie Animation Intro
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
         gr.HTML("""
         <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
         <div id="lottie_container">
-            <dotlottie-player src="https://lottie.host/3a69db62-ac6b-419d-8949-79fe213690c8/QJbL66mr48.lottie" 
-            background="transparent" speed="1" style="width:100%;height:100%" loop autoplay></dotlottie-player>
+            <dotlottie-player
+                src="https://lottie.host/3a69db62-ac6b-419d-8949-79fe213690c8/QJbL66mr48.lottie"
+                background="transparent"
+                speed="1"
+                style="width: 100%; height: 100%"
+                loop
+                autoplay>
+            </dotlottie-player>
         </div>
         """)
-        gr.Markdown("Hello! I'm your AI assistant 🤖<br>Ask me anything about Akshay's professional background!")
+        gr.Markdown("""
+        <div style='animation: fadeIn 0.8s ease-out;'>
+        Hello! I'm your AI assistant 🤖<br>
+        Ready to explore Akshay's professional background!
+        </div>
+        """)
 
-    # Chat Interface
-    chatbot = gr.Chatbot(visible=False, elem_id="chatbot", height=500)
-    
-    with gr.Row(elem_id="input_container"):
+    # 💬 Chatbot
+    chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
+
+    # ⌨️ Input area
+    with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
-            placeholder="Type your question here...", 
-            show_label=False, 
+            label="",
+            placeholder="Ask me anything about Akshay's profile...",
             container=False,
             elem_id="input_textbox",
-            autofocus=True
+            lines=1,
+            max_lines=5
         )
         submit = gr.Button("➤", elem_id="send_button")
 
+    # 📤 Response handler
     def respond(message, chat_history):
-        if not message.strip():
-            return "", chat_history
-        
-        # Process message
         relevant_excerpts = semantic_search(message, retriever)
-        bot_message = resume_chat_completion(client, "llama3-70b", message, relevant_excerpts)
-        
-        # Update chat history
-        chat_history.append((message, bot_message))
-        
+        bot_message = resume_chat_completion(
+            client, 
+            "llama-3.3-70b-versatile", 
+            message, 
+            relevant_excerpts
+        )
+        chat_history.append({"role": "user", "content": message})
+        chat_history.append({"role": "assistant", "content": bot_message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
-    # Bind interactions
+    # 📩 Bind interactions
     submit.click(
-        respond,
-        [msg, chatbot],
+        respond, 
+        [msg, chatbot], 
         [msg, chatbot, intro_section, chatbot],
-        _js=js,
-        api_name="send_message"
+        show_progress=False
     )
-    
     msg.submit(
-        respond,
-        [msg, chatbot],
+        respond, 
+        [msg, chatbot], 
         [msg, chatbot, intro_section, chatbot],
-        _js=js,
-        api_name="submit_message"
+        show_progress=False
     )
 
+# 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
