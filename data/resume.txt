@@ -1,42 +1,122 @@
-Summary:
-Akshay Abraham is a highly accomplished AI/ML and Full-stack developer with a strong background in Cheminformatics. He is known for delivering quantifiable results and innovative solutions across diverse technical domains.
+Akshay Abraham
+
+As a computing graduate with a strong background in computational chemistry, I am passionate about leveraging technology to solve complex problems. With experience in software development, cheminformatics, and bioinformatics, I aim to pursue a career in informatics development and analysis. Proficient in Python, C#, Dart, SQL, Django, and machine learning, and experienced in molecular modeling and data management, I effectively support program-related data tasks. A quick learner committed to continuous improvement, I thrive in collaborative environments, contributing technical expertise and analytical skills to achieve shared goals.
 
 ---
 
-Core Strengths:
-AI/ML: Built a Dialogflow AI Assistant saving researchers 15+ hours/month by automating 50+ weekly chemistry queries.
-Cheminformatics: Developed a drug discovery pipeline improving efficiency by 30% and boosted druglikeness prediction accuracy by 30% with Ligand Explorer.
-Full-stack Development: Created production-ready tools using Django, Docker, and Azure; developed a Job Tracker Chrome Extension used by 1000+ students.
+CONTACT DETAILS
++44781815774         akshayabraham02@gmail.com                  www.linkedin.com/in/akshay-abraham
+11 Hanover Street, Portadown, BT62 3ER
 
 ---
 
-Key Projects:
-Ligand Explorer: A project that boosted druglikeness prediction accuracy by 30% through advanced computational methods.
-AI Lab Assistant: A Dialogflow AI Assistant that automated 50+ weekly chemistry queries, saving researchers 15+ hours/month.
-Job Tracker Chrome Extension: A popular Chrome Extension developed that is used by over 1000+ students for job application tracking, streamlining their job search process.
+ACADEMIC BACKGROUND
+Masters in Computing | 2023-2024
+Sheffield Hallam University, England
+• Classification: Merit
+• Project: ML solutions for Lab Safety: Comparative analysis of custom models Vs. no-code platforms
+
+Bachelor of Science in Chemistry | 2018-2021
+Madras Christian College, India
+• Classification: First class (1st)
+• Project: Construction of a simple inexpensive polarimeter, Replacing Aspirin with Detox drink
+• Convener of techno club at department of chemistry
+• Volunteer at National Service Scheme
 
 ---
 
-Technical Skills:
-AI/ML, Cheminformatics, Full-stack Development, Django, Docker, Azure, Natural Language Processing, Machine Learning, Deep Learning, Python, Database Management (SQL, NoSQL), Cloud Computing, API Development, Data Analysis, Algorithm Design, Software Architecture.
+CERTIFICATIONS
+Advanced SQL | April 2025
+Kaggle
+
+Introduction to LIMS and Information Systems (P.A.C.E. Certified) | April 2025
+Centers for Disease Control and Prevention (CDC)
+
+Database for Developers: Foundations | March 2025
+Oracle
+
+Cheminformatics | October 2018
+Madras Christian College
 
 ---
 
-Quantifiable Achievements:
-Saved researchers 15+ hours/month with Dialogflow AI Assistant.
-Improved drug discovery pipeline efficiency by 30%.
-Boosted druglikeness prediction accuracy by 30% with Ligand Explorer.
-Automated 50+ weekly chemistry queries.
-Developed Job Tracker Chrome Extension used by 1000+ students.
+EXPERIENCE
+Junior Software Developer
+• MadEmpty, India
+• From 01/03/2022 – 30/11/2022
+• Job Description: Contributed to various software development projects, focusing on building, testing, and maintaining software applications using Python, C#, Dart, SQL, and Django.
+
+Research Assistant
+• Computational Chemistry Lab Madras Christian College, India
+• From: 01/05/2021 – 30/11/2021
+• Job Description: Conducted research on molecular tuning for optoelectronic applications using Gaussian software and Density Functional Theory (DFT) and AI driven drug discovery.
+
+Crew Member
+• McDonald’s, England
+• From: 02/01/2023 – 30/09/2024
+• Job Description: Collaborated with team members to deliver exceptional customer service, meeting company standards.
 
 ---
 
-Work Experience:
-Innovative AI Labs: Senior AI/ML Engineer (Jan 2023 - Present). Leads development of scalable AI solutions, including enterprise Dialogflow integrations.
-ChemTech Pharma: Cheminformatics Scientist (Jul 2020 - Dec 2022). Designed and implemented drug discovery pipelines, focusing on predictive modeling.
-DevSolutions Co.: Full-stack Developer (Jun 2018 - Jun 2020). Built and maintained web applications, including a popular Chrome extension for job tracking.
+PROJECTS
+AkshayAbraham (github.com)
+
+AI Lab Assistant
+Developed an AI lab assistant utilizing Python and API integration, providing students with comprehensive answers to chemistry lab inquiries using Dialogflow.
+
+Ligand Explorer - Bioinformatics pipeline for early-stage drug discovery
+Developed a bioinformatics pipeline integrating data analysis and machine learning to rank ligands based on druglikeness, optimize molecular properties using genetic algorithms, predict ADMET properties, and provide 3D structural visualization and comparison with commercially available drugs, achieving a 30% improvement in molecular druglikeness scores.
+
+Job Application Manager – Chrome Extension for Job Tracking
+Built a Chrome extension using JavaScript, Google Apps Script, and Python to capture and manage job application data via API integration with Google Sheets. Enabled quick data entry through hotkeys and context menus. Focused on structured data storage, automation, and SQL style logic for efficient data management and retrieval.
+
+Web Apps Development
+• Created an event organization website with HTML, CSS, and PHP, incorporating user authentication, profile management, real-time chat, role-based access controls, and bulk email features.
+• Developed a Django-based web application enabling students to select study modules and connect with tutors. Utilized Azure VM, App Services, Blob Storage, and MySQL Database for enhanced scalability and reliability, optimizing resource usage.
+
+Android Apps Development
+Developed Catalyst, an object detection app using TensorFlow to identify laboratory apparatus.
 
 ---
 
-Value Proposition:
-Akshay Abraham is a unique blend of scientific rigor and cutting-edge technical execution, consistently delivering solutions that not only meet but exceed expectations, driving efficiency and innovation.
+SKILLS
+Software development skills:
+Android app development Flutter, Dart and Android Studio
+Web app development
+HTML, CSS, C#, .NET and Django
+Database management
+SQL, MySQL, NoSQL, and MongoDB
+Cloud computing
+Azure, Azure DevOps, microservices, azure architectures, Docker and Kubernetes
+Machine learning
+Python, TensorFlow, Keras, YOLO, Dialogueflow and OpenCV
+UI/UX Design
+Figma and Adobe Illustrator
+Software Proficiency
+VS code, PyCharm, Google Colab, GitHub, MS Word, MS PowerPoint and MS Excel
+Other technical skills
+SDLC, Software Designing, Debugging, Data management, and Windows OS
+
+Chemistry Skills:
+Cheminformatics and Bioinformatics
+Molecular Modelling and Simulation, SAR Studies, Docking, Virtual Screening, Protein Data Bank, PubChem, Genetic algorithms, RDKit
+Computational chemistry DFT, Drug designing and Predictive Modelling
+Software Proficiency
+Gaussian, Schrödinger, AutoDock, ChemDraw, PyCharm, ChemSpider, PyMOL, Weka, and Laboratory Information Management System (LIMS)
+
+Soft skills
+Project management, Communication, Teamwork, Problem solving, Logical Thinking, Time management, Adaptability, Quick Learner, meticulous and Organized
+
+---
+
+PUBLICATIONS
+• Published a research paper on the design and validation of novel SARS-CoV-2 inhibitors using artificial intelligence and bioinformatics methods, including molecular docking and molecular dynamics simulations. https://doi.org/10.1039/D4ME00062E
+• Published a periodic table mobile app in Amazon app store. https://www.amazon.com/dp/B08BYHLBX8/ref=apps_sf_sta
+
+---
+
+LANGUAGES
+• English
+• Malayalam
+• Tamil
+• Hindi
