@@ -39,6 +39,12 @@ body, .gradio-container {
     display: none !important;
 }
 
+/* Hide Scrollbars */
+#chatbot::-webkit-scrollbar {
+    width: 0 !important;
+    background: transparent !important;
+}
+
 /* Lottie container styling */
 #lottie_container {
     background: transparent !important;
@@ -59,6 +65,10 @@ dotlottie-player {
     border: none !important;
     padding: 0 !important;
     transition: opacity 0.3s ease;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+    overflow-y: auto !important; /* Maintain scroll functionality */
+
 }
 
 /* Intro section */
