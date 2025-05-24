@@ -71,19 +71,25 @@ dotlottie-player {
 
 }
 
+.gradio-container {
+    height: 100vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
 /* Intro section */
 #intro_container {
-    text-align: center;
-    margin: 20px auto;
-    max-width: 500px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 20px;
     animation: fadeIn 0.8s ease-out;
 }
 
 .prompt-row {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    margin: 10px 0;
 }
 
 .prompt-container {
@@ -151,13 +157,13 @@ dotlottie-player {
 
 /* Input container */
 #input_container {
-    position: relative;
-    background-color: #2C2C2C;
-    border: 1px solid #444;
-    border-radius: 25px;
-    margin: 20px auto;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
     max-width: 600px;
-    transition: all 0.3s ease;
+    margin: 0 auto;
 }
 
 #input_container:focus-within {
@@ -357,7 +363,7 @@ with gr.Blocks(css=custom_css) as demo:
         """)
 
         gr.HTML("""
-        <div style="margin-top: 24px; text-align: center;">
+        <div style="margin: 0 auto; max-width: 500px;">
             <!-- First Row - Two Questions -->
             <div class="prompt-row">
                 <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
