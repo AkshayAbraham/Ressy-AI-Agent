@@ -39,11 +39,17 @@ body, .gradio-container {
     display: none !important;
 }
 
-/* Hide Scrollbars */
-#chatbot::-webkit-scrollbar {
+/* Hide Scrollbars (for vertical on chatbot, and horizontal on prompt container) */
+#chatbot::-webkit-scrollbar, #horizontal-prompts::-webkit-scrollbar {
     width: 0 !important;
+    height: 0 !important; /* Hide horizontal scrollbar */
     background: transparent !important;
 }
+#chatbot, #horizontal-prompts {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
+
 
 /* Lottie container styling */
 #lottie_container {
@@ -65,10 +71,7 @@ dotlottie-player {
     border: none !important;
     padding: 0 !important;
     transition: opacity 0.3s ease;
-    scrollbar-width: none !important; /* Firefox */
-    -ms-overflow-style: none !important; /* IE/Edge */
-    overflow-y: auto !important; /* Maintain scroll functionality */
-
+    overflow-y: auto !important; /* Maintain vertical scroll functionality */
 }
 
 /* Intro section */
@@ -79,25 +82,17 @@ dotlottie-player {
     animation: fadeIn 0.8s ease-out;
 }
 
-.prompts-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    padding: 10px 0;
-    margin: 20px 0;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
-}
-
-.prompts-wrapper::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
-
-.prompt-row {
+/* New: Horizontal Prompts Container */
+#horizontal-prompts {
     display: flex;
-    gap: 15px;
-    padding: 0 20px;
-    width: max-content;
-    margin: 0 auto;
+    gap: 20px; /* Space between prompt containers */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    padding: 10px 0; /* Add some padding if needed, not affecting scrollbar */
+    justify-content: flex-start; /* Align items to the start, allowing overflow */
+    margin: 24px auto; /* Center the overall container if it's smaller than parent */
+    max-width: 100%; /* Ensure it can take full width */
+    white-space: nowrap; /* Prevent items from wrapping */
+    scroll-snap-type: x mandatory; /* Optional: for smoother snapping to items */
 }
 
 .prompt-container {
@@ -107,10 +102,14 @@ dotlottie-player {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid #3a3a3a;
     text-align: center;
-    min-width: 180px;
-    flex-shrink: 0;
+    min-width: 180px; /* Ensures minimum width for each card */
+    flex-shrink: 0; /* Prevent items from shrinking */
     transition: all 0.3s ease;
     cursor: pointer;
+    display: flex; /* For centering content within the card */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    scroll-snap-align: center; /* Optional: for smoother snapping to items */
 }
 
 .prompt-container:hover {
@@ -119,8 +118,12 @@ dotlottie-player {
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
 }
 
-.single-prompt {
-    margin: 0 auto;
+.prompt-container p {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1em;
+    line-height: 1.4;
+    white-space: normal; /* Allow text inside cards to wrap */
 }
 
 @keyframes fadeIn {
@@ -225,6 +228,10 @@ button[aria-label="Scroll to bottom"] {
 with gr.Blocks(css=custom_css) as demo:
     gr.HTML("""
 <style>
+    /* This style block within gr.HTML is not best practice for external CSS.
+       It's redundant if the rules are already in custom_css.
+       Keeping it for now as it was in your provided code,
+       but ideally, these rules would be consolidated into `custom_css`. */
     .top-icons {
         display: flex;
         justify-content: flex-end;
@@ -306,16 +313,13 @@ with gr.Blocks(css=custom_css) as demo:
     }
 </style>
 
-<!-- Top Right Icons -->
 <div class="top-icons">
-    <!-- Info Icon -->
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
         </svg>
     </button>
 
-    <!-- Download Icon -->
     <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
@@ -323,7 +327,6 @@ with gr.Blocks(css=custom_css) as demo:
     </a>
 </div>
 
-<!-- Info Modal -->
 <div id="info_modal">
     <h3>About This Agent</h3>
     <p>This chatbot uses RAG and LLM tech to answer questions about Akshay Abraham’s professional background. Ask about skills, experience, or career path!</p>
@@ -364,20 +367,14 @@ with gr.Blocks(css=custom_css) as demo:
         """)
 
         gr.HTML("""
-        <div style="margin-top: 24px; text-align: center;">
-            <!-- First Row - Two Questions -->
-            <div class="prompt-row">
-                <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
-                    <p>What are Akshay's key skills?</p>
-                </div>
-                
-                <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay\\'s past projects.')">
-                    <p>Tell me about Akshay's past projects.</p>
-                </div>
+        <div id="horizontal-prompts">
+            <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
+                <p>What are Akshay's key skills?</p>
             </div>
-            
-            <!-- Second Row - Single Centered Question -->
-            <div class="prompt-container single-prompt" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
+            <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay\\'s past projects.')">
+                <p>Tell me about Akshay's past projects.</p>
+            </div>
+            <div class="prompt-container" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
                 <p>What tools or frameworks has Akshay used?</p>
             </div>
         </div>
@@ -419,9 +416,9 @@ with gr.Blocks(css=custom_css) as demo:
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(
-            client, 
-            "llama-3.3-70b-versatile", 
-            message, 
+            client,
+            "llama-3.3-70b-versatile",
+            message,
             relevant_excerpts
         )
         chat_history.append({"role": "assistant", "content": bot_message})
