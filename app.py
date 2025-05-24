@@ -237,8 +237,15 @@ button[aria-label="Scroll to bottom"] {
 
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
-    # MODIFIED: Define a gr.File component to serve the PDF
-    pdf_viewer = gr.File(value="data/resume.pdf", visible=False, file_count="single")
+    # MODIFIED: Define a gr.File component to serve the PDF for download
+    # It's hidden, but Gradio will generate a downloadable URL for it.
+    # The 'file_count="single"' and 'elem_id' are important.
+    pdf_file_comp = gr.File(
+        value="data/resume.pdf",
+        visible=False, # Keep hidden
+        file_count="single",
+        elem_id="pdf_file_component" # This ID helps us target it with JS
+    )
 
     gr.HTML("""
 <style>
@@ -358,7 +365,7 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <a id="download_icon" href="#" title="View Resume" target="_blank" rel="noopener noreferrer">
+    <a id="download_icon" href="#" title="Download Resume" download="Akshay_Abraham_Resume.pdf">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
@@ -400,19 +407,23 @@ with gr.Blocks(css=custom_css) as demo:
         document.getElementById('info_modal').style.display = 'none';
     };
 
-    // MODIFIED: Script to get Gradio File URL and update the link
-    // This script runs after Gradio components are rendered.
+    // MODIFIED: Script to get Gradio File URL for download and update the link
+    // Use a short delay to ensure Gradio has rendered the hidden file component
     document.addEventListener('DOMContentLoaded', (event) => {
-        const fileElem = document.querySelector('#pdf_viewer_file .file-preview a'); // Targeting the link within the hidden gr.File component
-        const downloadIcon = document.getElementById('download_icon');
+        setTimeout(() => {
+            const fileContainer = document.getElementById('pdf_file_component'); // The hidden gr.File component's container
+            if (fileContainer) {
+                // Find the actual <a> tag that Gradio creates for download within the hidden component
+                const gradioDownloadLink = fileContainer.querySelector('.file-preview a');
+                const customDownloadIcon = document.getElementById('download_icon');
 
-        if (fileElem && downloadIcon) {
-            // Get the generated URL from the hidden gr.File component
-            const pdfUrl = fileElem.href;
-            if (pdfUrl) {
-                downloadIcon.href = pdfUrl; // Set the href of your icon to this URL
+                if (gradioDownloadLink && customDownloadIcon) {
+                    customDownloadIcon.href = gradioDownloadLink.href;
+                    // The 'download' attribute is already set on the custom icon's HTML
+                    // customDownloadIcon.download = "Akshay_Abraham_Resume.pdf"; // This line is not strictly needed if already in HTML
+                }
             }
-        }
+        }, 500); // 500ms delay: Give Gradio time to fully render its components.
     });
 </script>
 """)
