@@ -249,13 +249,16 @@ with gr.Blocks(css=custom_css) as demo:
     }
 </style>
 
-<!-- Header Icons -->
+<!-- Top Right Icons -->
 <div class="top-icons">
+    <!-- Info Icon -->
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
         </svg>
     </button>
+
+    <!-- Download Icon -->
     <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
@@ -271,6 +274,7 @@ with gr.Blocks(css=custom_css) as demo:
 </div>
 
 <script>
+    // Show info modal on icon click
     document.getElementById('info_icon').onclick = () => {
         document.getElementById('info_modal').style.display = 'block';
     };
@@ -280,7 +284,7 @@ with gr.Blocks(css=custom_css) as demo:
 </script>
 """)
 
-    # 🤖 Intro Section
+    # 🤖 Intro Section with Lottie + Example Prompts
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
         gr.HTML("""
         <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
@@ -296,27 +300,47 @@ with gr.Blocks(css=custom_css) as demo:
         </div>
         """)
         gr.Markdown("""
-        <div style='animation: fadeIn 0.8s ease-out; text-align: center; color: white;'>
-        Hello! I'm your AI assistant <strong>Ressy</strong> 🤖<br>
+        <div style='animation: fadeIn 0.8s ease-out; text-align: center;'>
+        Hello! I'm your AI assistant <strong>Ressy 🤖</strong><br>
         Ready to explore Akshay's professional background!
         </div>
         """)
+
         gr.HTML("""
-        <!-- Prompt Suggestions -->
-        <div id="example_prompts" style="margin-top: 20px; text-align: center;">
-            <p style="font-weight: bold; margin-bottom: 10px; color: #ffffff;">💡 Example Questions:</p>
+        <!-- Prompt Suggestions Container -->
+        <div id="example_prompts_container" style="
+            margin-top: 24px;
+            padding: 20px;
+            background-color: #1f1f1f;
+            border-radius: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        ">
+            <p style="font-weight: bold; margin-bottom: 12px; color: #ffffff; text-align: center;">
+                💡 Example Questions:
+            </p>
             <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                <button class="prompt-btn">What are Akshay's key skills?</button>
-                <button class="prompt-btn">Tell me about Akshay’s past projects.</button>
-                <button class="prompt-btn">What tools or frameworks has Akshay used?</button>
+                <button class="prompt-btn" onclick="fillPrompt('What are Akshay\\'s key skills?')">What are Akshay's key skills?</button>
+                <button class="prompt-btn" onclick="fillPrompt('Tell me about Akshay’s past projects.')">Tell me about Akshay’s past projects.</button>
+                <button class="prompt-btn" onclick="fillPrompt('What tools or frameworks has Akshay used?')">What tools or frameworks has Akshay used?</button>
             </div>
         </div>
+
+        <script>
+            function fillPrompt(text) {
+                const textbox = document.querySelector("#input_textbox textarea");
+                textbox.value = text;
+                textbox.focus();
+            }
+        </script>
         """)
 
     # 💬 Chatbot
     chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
 
-    # ⌨️ Input area
+    # ⌨️ Input Area
     with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
@@ -328,7 +352,7 @@ with gr.Blocks(css=custom_css) as demo:
         )
         submit = gr.Button("➤", elem_id="send_button")
 
-    # 🔁 Logic
+    # 🧠 Response Logic
     def user_submit(message, chat_history):
         chat_history.append({"role": "user", "content": message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
@@ -337,37 +361,40 @@ with gr.Blocks(css=custom_css) as demo:
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(
-            client,
-            "llama-3.3-70b-versatile",
-            message,
+            client, 
+            "llama-3.3-70b-versatile", 
+            message, 
             relevant_excerpts
         )
         chat_history.append({"role": "assistant", "content": bot_message})
         return chat_history
 
-    # 📩 Bind interactions
+    # 📩 Bind Events
     submit.click(
         user_submit, [msg, chatbot], [msg, chatbot, intro_section, chatbot], show_progress=False
     ).then(
         bot_reply, chatbot, chatbot
     )
+
     msg.submit(
         user_submit, [msg, chatbot], [msg, chatbot, intro_section, chatbot], show_progress=False
     ).then(
         bot_reply, chatbot, chatbot
     )
 
-    # 🔧 JS behavior (scroll, clear, trigger prompt buttons)
+    # 🔄 Scroll + Hide Intro
     gr.HTML("""
 <script>
-    // Auto-scroll
     const observer = new MutationObserver(() => {
         const bot = document.querySelector("#chatbot");
         if (bot) {
             bot.scrollTo({ top: bot.scrollHeight, behavior: "smooth" });
         }
     });
-    observer.observe(document.querySelector("#chatbot"), { childList: true, subtree: true });
+    observer.observe(document.querySelector("#chatbot"), {
+        childList: true,
+        subtree: true
+    });
 
     const textbox = document.querySelector("#input_textbox textarea");
     const button = document.querySelector("#send_button");
@@ -385,18 +412,6 @@ with gr.Blocks(css=custom_css) as demo:
         if (e.key === "Enter" && !e.shiftKey) {
             setTimeout(clearAndHideIntro, 10);
         }
-    });
-
-    // Prompt button click triggers simulated message
-    document.querySelectorAll(".prompt-btn").forEach(button => {
-        button.addEventListener("click", () => {
-            textbox.value = button.innerText;
-            textbox.dispatchEvent(new KeyboardEvent("keydown", {
-                bubbles: true,
-                cancelable: true,
-                key: "Enter"
-            }));
-        });
     });
 </script>
 """)
