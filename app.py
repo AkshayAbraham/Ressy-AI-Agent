@@ -26,8 +26,8 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Custom CSS ---
 custom_css = """
-body, .gradio-container {
-    background-color: #1A1A1A !important;
+body, .gradio-container,.dark {
+    background-color: #1A1A1A !important;  /* Dark charcoal */
     color: white;
     font-family: 'Segoe UI', sans-serif;
 }
@@ -67,6 +67,7 @@ dotlottie-player {
     transition: opacity 0.3s ease;
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE/Edge */
+    box-shadow: none !important;
 }
 
 /* Intro section */
@@ -108,6 +109,12 @@ dotlottie-player {
     background-color: #2C2C2C !important;
     color: white !important;
     animation-delay: 0.2s;
+}
+
+.gr-messages {
+    background-color: transparent !important;
+    border: none !important;
+    gap: 12px !important;  /* Message spacing */
 }
 
 /* Input container */
