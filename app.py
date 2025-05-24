@@ -79,37 +79,41 @@ dotlottie-player {
     animation: fadeIn 0.8s ease-out;
 }
 
-/* Individual Prompt Container */
+.prompt-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
 .prompt-container {
-    background-color: #282828; /* Base background for the container */
+    background-color: #282828;
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid #3a3a3a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center content vertically */
-    align-items: center;
     text-align: center;
-    flex: 1; /* Allows containers to grow/shrink */
-    min-width: 180px; /* Minimum width for each container */
-    max-width: 220px; /* Maximum width for each container */
-    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer; /* Indicates it's clickable */
+    min-width: 180px;
+    max-width: 220px;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .prompt-container:hover {
-    background-color: #383838; /* Darker gray/black on hover */
-    transform: translateY(-5px); /* Slight lift effect */
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* More pronounced shadow */
+    background-color: #383838;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
 }
 
 .prompt-container p {
-    font-weight: normal; /* Changed to normal, bold already on text */
-    margin: 0; /* Remove default paragraph margin */
+    margin: 0;
     color: #ffffff;
     font-size: 1em;
     line-height: 1.4;
+}
+
+.single-prompt {
+    margin: 0 auto;
 }
 
 @keyframes fadeIn {
@@ -353,42 +357,32 @@ with gr.Blocks(css=custom_css) as demo:
         """)
 
         gr.HTML("""
-        <!-- Prompt Suggestions Container -->
-        <div id="example_prompts_container" style="
-            margin-top: 24px;
-            padding: 20px;
-            background-color: #1f1f1f;
-            border-radius: 20px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        ">
-            <p style="font-weight: bold; margin-bottom: 12px; color: #ffffff; text-align: center;">
-                💡 Example Questions:
-            </p>
-            <div id="example_prompts_wrapper">
-            <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
-                <p>What are Akshay's key skills?</p>
+        <div style="margin-top: 24px; text-align: center;">
+            <!-- First Row - Two Questions -->
+            <div class="prompt-row">
+                <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
+                    <p>What are Akshay's key skills?</p>
+                </div>
+                
+                <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay\\'s past projects.')">
+                    <p>Tell me about Akshay's past projects.</p>
+                </div>
             </div>
-            <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay’s past projects.')">
-                <p>Tell me about Akshay’s past projects.</p>
-            </div>
-            <div class="prompt-container" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
+            
+            <!-- Second Row - Single Centered Question -->
+            <div class="prompt-container single-prompt" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
                 <p>What tools or frameworks has Akshay used?</p>
             </div>
         </div>
 
         <script>
-            // Function to fill the textbox and trigger submission
             function fillPromptAndSubmit(text) {
                 const textbox = document.querySelector("#input_textbox textarea");
-                textbox.value = text; // Fill the textbox
-                // Dispatch 'input' event so Gradio recognizes the change
+                textbox.value = text;
                 textbox.dispatchEvent(new Event('input', { bubbles: true }));
                 const submitButton = document.querySelector("#send_button");
                 if (submitButton) {
-                    submitButton.click(); // Simulate a click on the submit button
+                    submitButton.click();
                 }
             }
         </script>
