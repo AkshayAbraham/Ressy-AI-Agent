@@ -327,11 +327,26 @@ with gr.Blocks(css=custom_css) as demo:
     </a>
 </div>
 
-&lt;div id="info_modal">
-&lt;h3>About Your AI Resume Assistant: Ressy 🤖&lt;/h3>
-&lt;p>&lt;strong>Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey!&lt;/strong>&lt;br>&lt;br>Ressy is powered by &lt;strong>cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology&lt;/strong>. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with accurate, relevant, and insightful answers.&lt;br>&lt;br>&lt;strong>What can I help you discover?&lt;/strong>&lt;br>&lt;ul>&lt;li>&lt;strong>Skills Deep Dive:&lt;/strong> Uncover Akshay's expertise in areas like &lt;strong>Machine Learning, Deep Learning, Data Analysis, Python, SQL, cloud platforms (AWS)&lt;/strong>, and various tools and frameworks.&lt;/li>&lt;li>&lt;strong>Project Showcase:&lt;/strong> Explore detailed information about his impactful projects, including &lt;strong>customer churn prediction&lt;/strong> and &lt;strong>NLP-based sentiment analysis&lt;/strong>.&lt;/li>&lt;li>&lt;strong>Experience & Impact:&lt;/strong> Learn about his professional roles, responsibilities, and the tangible results he delivered.&lt;/li>&lt;li>&lt;strong>Career Trajectory:&lt;/strong> Understand his career path and future aspirations.&lt;/li>&lt;/ul>Think of me as your dedicated, instant, and interactive resume reader. I'm here to streamline your search for information, making it easier to see how Akshay's background aligns with your needs.&lt;br>&lt;br>Ready to start exploring? Ask away!&lt;/p>
-&lt;button id="close_modal">Close&lt;/button>
-&lt;/div>
+<div id="info_modal">
+    <h3>About Your AI Resume Assistant: Ressy 🤖</h3>
+    <p>
+        **Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey!** 👋
+        <br><br>
+        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
+        <br><br>
+        **What can I help you discover?** 💡
+        <ul>
+            <li>**Skills Deep Dive:** Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
+            <li>**Project Showcase:** Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
+            <li>**Experience & Impact:** Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
+            <li>**Career Trajectory:** Understand his career path and future aspirations. 🌟</li>
+        </ul>
+        Think of me as your dedicated, instant, and interactive resume reader. I'm here to streamline your search for information, making it easier to see how Akshay's background aligns with your needs. 🎯
+        <br><br>
+        Ready to start exploring? Ask away! 💬
+    </p>
+    <button id="close_modal">Close</button>
+</div>
 
 <script>
     // Show info modal on icon click
