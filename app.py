@@ -222,6 +222,17 @@ dotlottie-player {
 button[aria-label="Scroll to bottom"] {
     display: none !important;
 }
+
+/* Styles for the info modal scrollbar */
+#info_modal::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+#info_modal {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+}
 """
 
 # --- Gradio UI ---
@@ -271,7 +282,7 @@ with gr.Blocks(css=custom_css) as demo:
     #info_modal {
         display: none;
         position: fixed;
-        top: 20%;
+        top: 10%; /* Adjusted to be higher on screen */
         left: 50%;
         transform: translateX(-50%);
         background: #2C2C2C;
@@ -281,6 +292,9 @@ with gr.Blocks(css=custom_css) as demo:
         box-shadow: 0 0 20px rgba(0,0,0,0.4);
         z-index: 9999;
         max-width: 400px;
+        max-height: 80vh; /* Set a max height relative to viewport height */
+        overflow-y: auto; /* Enable internal scrolling if content overflows */
+        box-sizing: border-box; /* Include padding in height calculation */
     }
     #info_modal button#close_modal {
         margin-top: 12px;
