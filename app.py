@@ -213,8 +213,13 @@ with gr.Blocks(css=custom_css) as demo:
         )
         submit = gr.Button("➤", elem_id="send_button")
 
-    # 📤 Response handler
-    def respond(message, chat_history):
+# --- Respond logic split in two parts ---
+    def user_submit(message, chat_history):
+        chat_history.append({"role": "user", "content": message})
+        return "", chat_history, gr.update(visible=False), gr.update(visible=True)
+
+    def bot_reply(chat_history):
+        message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(
             client, 
@@ -222,24 +227,23 @@ with gr.Blocks(css=custom_css) as demo:
             message, 
             relevant_excerpts
         )
-        chat_history.append({"role": "user", "content": message})
         chat_history.append({"role": "assistant", "content": bot_message})
-        return "", chat_history, gr.update(visible=False), gr.update(visible=True)
+        return chat_history
 
     # 📩 Bind interactions
     submit.click(
-        respond, 
-        [msg, chatbot], 
-        [msg, chatbot, intro_section, chatbot],
-        show_progress=False
-    )
-    msg.submit(
-        respond, 
-        [msg, chatbot], 
-        [msg, chatbot, intro_section, chatbot],
-        show_progress=False
+        user_submit, [msg, chatbot], [msg, chatbot, intro_section, chatbot], show_progress=False
+    ).then(
+        bot_reply, chatbot, chatbot
     )
 
+    msg.submit(
+        user_submit, [msg, chatbot], [msg, chatbot, intro_section, chatbot], show_progress=False
+    ).then(
+        bot_reply, chatbot, chatbot
+    )
+
+    # 🧠 JS for UI behavior
     gr.HTML("""
 <script>
     // Smooth auto-scroll to bottom of chatbot
@@ -267,20 +271,17 @@ with gr.Blocks(css=custom_css) as demo:
         if (chatbot) chatbot.style.display = "block";
     }
 
-    // Clear textbox on button click
+    // Clear on button click
     button.addEventListener("click", clearAndHideIntro);
 
-    // Clear textbox on Enter (keyboard)
+    // Clear on Enter key
     textbox.addEventListener("keydown", function(e) {
         if (e.key === "Enter" && !e.shiftKey) {
-            setTimeout(() => {
-                clearAndHideIntro();
-            }, 10);
+            setTimeout(clearAndHideIntro, 10);
         }
     });
 </script>
 """)
-
 
 # 🚀 Launch
 if __name__ == "__main__":
