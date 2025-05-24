@@ -33,8 +33,8 @@ body, .gradio-container {
 }
 
 /* Hide all loading indicators */
-.progress-bar, .animate-spin, .processing-time, 
-[data-testid="progress-bar"], .progress, 
+.progress-bar, .animate-spin, .processing-time,
+[data-testid="progress-bar"], .progress,
 .spinner, .loading, .clear-button {
     display: none !important;
 }
@@ -57,8 +57,8 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto;
-    width: 100px !important;
-    height: 100px !important;
+    width: 150px !important;
+    height: 150px !important;
 }
 
 dotlottie-player {
@@ -89,7 +89,7 @@ dotlottie-player {
     overflow-x: auto; /* Enable horizontal scrolling */
     padding: 10px 0; /* Add some padding if needed, not affecting scrollbar */
     justify-content: flex-start; /* Align items to the start, allowing overflow */
-    margin: 24px auto; /* Center the overall container if it's smaller than parent */
+    margin: 10px auto 0 auto; /* DECREASED THIS MARGIN-TOP to 10px */
     max-width: 100%; /* Ensure it can take full width */
     white-space: nowrap; /* Prevent items from wrapping */
     scroll-snap-type: x mandatory; /* Optional: for smoother snapping to items */
@@ -165,7 +165,7 @@ dotlottie-player {
     background-color: #2C2C2C;
     border: 1px solid #444;
     border-radius: 25px;
-    margin: 20px auto;
+    margin: 20px auto; /* This margin controls the space above the input box */
     max-width: 600px;
     transition: all 0.3s ease;
 }
