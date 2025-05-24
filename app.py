@@ -86,7 +86,7 @@ dotlottie-player {
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid #3a3a3a;
-    display: inline-block;
+    display: flex;
     flex-direction: column;
     justify-content: center; /* Center content vertically */
     align-items: center;
