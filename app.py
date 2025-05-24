@@ -355,7 +355,7 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <a id="download_icon" href="/file=files/resume.pdf" title="View Resume" target="_blank" rel="noopener noreferrer">
+    <a id="download_icon" href="/file=data/resume.pdf" title="View Resume" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
