@@ -170,6 +170,12 @@ dotlottie-player {
     background-color: #357ABD !important;
     transform: translateY(-50%) scale(1.1) !important;
 }
+
+/* Generic fallback to hide any floating scroll-to-bottom button */
+button[aria-label="Scroll to bottom"] {
+    display: none !important;
+}
+
 """
 
 # --- Gradio UI ---
