@@ -240,6 +240,48 @@ with gr.Blocks(css=custom_css) as demo:
         show_progress=False
     )
 
+    gr.HTML("""
+<script>
+    // Smooth auto-scroll to bottom of chatbot
+    const observer = new MutationObserver(() => {
+        const bot = document.querySelector("#chatbot");
+        if (bot) {
+            bot.scrollTo({ top: bot.scrollHeight, behavior: "smooth" });
+        }
+    });
+
+    observer.observe(document.querySelector("#chatbot"), {
+        childList: true,
+        subtree: true
+    });
+
+    // Clear textbox on send (button or Enter)
+    const textbox = document.querySelector("#input_textbox textarea");
+    const button = document.querySelector("#send_button");
+
+    function clearAndHideIntro() {
+        textbox.value = "";
+        const intro = document.querySelector("#intro_container");
+        const chatbot = document.querySelector("#chatbot");
+        if (intro) intro.style.display = "none";
+        if (chatbot) chatbot.style.display = "block";
+    }
+
+    // Clear textbox on button click
+    button.addEventListener("click", clearAndHideIntro);
+
+    // Clear textbox on Enter (keyboard)
+    textbox.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            setTimeout(() => {
+                clearAndHideIntro();
+            }, 10);
+        }
+    });
+</script>
+""")
+
+
 # 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
