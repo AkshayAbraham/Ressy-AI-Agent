@@ -392,11 +392,12 @@ with gr.Blocks(css=custom_css) as demo:
         </div>
 
         <script>
-            function fillPrompt(text) {
+            // Function to fill the textbox and trigger submission
+            function fillPromptAndSubmit(text) {
                 const textbox = document.querySelector("#input_textbox textarea");
-                textbox.value = text;
-                textbox.focus();
-                textbox.dispatchEvent(new Event('input', { bubbles: true })); // Trigger input event for Gradio to recognize change
+                textbox.value = text; // Fill the textbox
+                // Dispatch 'input' event so Gradio recognizes the change
+                textbox.dispatchEvent(new Event('input', { bubbles: true }));
                 const submitButton = document.querySelector("#send_button");
                 if (submitButton) {
                     submitButton.click(); // Simulate a click on the submit button
