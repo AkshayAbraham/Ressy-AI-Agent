@@ -360,6 +360,9 @@ with gr.Blocks(css=custom_css) as demo:
         <br><br>
         Ready to start exploring? Ask away! 💬
     </p>
+    <div class="disclaimer">
+        ⚠️ **Important Note:** As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="YOUR_AKSHAY_ABRAHAM_LINKEDIN_URL_HERE" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
+    </div>
     <button id="close_modal">Close</button>
 </div>
 
