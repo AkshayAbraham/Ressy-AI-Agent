@@ -176,6 +176,22 @@ button[aria-label="Scroll to bottom"] {
     display: none !important;
 }
 
+.prompt-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.prompt-btn:hover {
+    background-color: #357ABD;
+    transform: scale(1.05);
+}
+
+
 """
 
 # --- Gradio UI ---
@@ -268,7 +284,25 @@ with gr.Blocks(css=custom_css) as demo:
     document.getElementById('close_modal').onclick = () => {
         document.getElementById('info_modal').style.display = 'none';
     };
+    document.querySelectorAll(".prompt-btn").forEach(button => {
+    button.addEventListener("click", () => {
+        const message = button.innerText;
+        const textbox = document.querySelector("#input_textbox textarea");
+        textbox.value = message;
+
+        // Trigger Enter key press to simulate message send
+        const enterEvent = new KeyboardEvent("keydown", {
+            bubbles: true,
+            cancelable: true,
+            key: "Enter",
+        });
+        textbox.dispatchEvent(enterEvent);
+    });
+});
+
 </script>
+
+
 """)
 
     # 🤖 Lottie Animation Intro
@@ -288,9 +322,20 @@ with gr.Blocks(css=custom_css) as demo:
         """)
         gr.Markdown("""
         <div style='animation: fadeIn 0.8s ease-out;'>
-        Hello! I'm your AI assistant 🤖<br>
+        Hello! I'm your AI assistant Ressy🤖<br>
         Ready to explore Akshay's professional background!
         </div>
+
+        <!-- Example Prompts -->
+<div id="example_prompts" style="margin-top: 20px; text-align: center;">
+    <p style="font-weight: bold; margin-bottom: 10px; color: #ffffff;">💡 Example Questions:</p>
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <button class="prompt-btn">What are Akshay's key skills?</button>
+        <button class="prompt-btn">Tell me about Akshay’s past projects.</button>
+        <button class="prompt-btn">What tools or frameworks has Akshay used?</button>
+    </div>
+</div>
+
         """)
 
     # 💬 Chatbot
