@@ -51,8 +51,8 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto;
-    width: 200px !important;
-    height: 200px !important;
+    width: 150px !important;
+    height: 150px !important;
 }
 
 dotlottie-player {
@@ -181,27 +181,81 @@ button[aria-label="Scroll to bottom"] {
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
     gr.HTML("""
-<div style="display: flex; justify-content: flex-end; gap: 15px; padding: 10px 20px;">
+<style>
+    .top-icons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 25px;
+        padding: 10px 20px;
+    }
+
+    .top-icons button,
+    .top-icons a {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .top-icons button:hover svg,
+    .top-icons a:hover svg {
+        transform: scale(1.2);
+    }
+
+    .top-icons svg {
+        fill: #ffffff;
+        width: 28px;
+        height: 28px;
+        transition: transform 0.2s ease;
+    }
+
+    #info_modal {
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2C2C2C;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        z-index: 9999;
+        max-width: 400px;
+    }
+
+    #info_modal button {
+        margin-top: 10px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="top-icons">
     <!-- Info Icon -->
-    <button id="info_icon" title="About Agent" style="background: none; border: none; cursor: pointer;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="#fff" height="24" width="24" viewBox="0 0 24 24">
+    <button id="info_icon" title="About Agent">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
         </svg>
     </button>
 
     <!-- Download Icon -->
-    <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download style="background: none; border: none; cursor: pointer;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="#fff" height="24" width="24" viewBox="0 0 24 24">
-            <path d="M5 20h14v-2H5v2zm7-18L5.33 9h3.84v4h5.66v-4h3.84L12 2z"/>
+    <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
     </a>
 </div>
 
 <!-- Info Modal -->
-<div id="info_modal" style="display:none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #2C2C2C; color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.4); z-index: 9999;">
+<div id="info_modal">
     <h3>About This Agent</h3>
-    <p>This chatbot is powered by LLM + RAG to answer questions about Akshay Abraham's professional background. Ask anything from work experience to technical skills!</p>
-    <button onclick="document.getElementById('info_modal').style.display='none'" style="margin-top: 10px; background-color: #007BFF; color: white; border: none; padding: 8px 12px; border-radius: 6px;">Close</button>
+    <p>This chatbot uses RAG and LLM tech to answer questions about Akshay Abraham’s professional background. Ask about skills, experience, or career path!</p>
+    <button onclick="document.getElementById('info_modal').style.display='none'">Close</button>
 </div>
 
 <script>
@@ -211,6 +265,7 @@ with gr.Blocks(css=custom_css) as demo:
     };
 </script>
 """)
+
 
 
     # 🤖 Lottie Animation Intro
