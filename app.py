@@ -51,8 +51,8 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto;
-    width: 50px !important;
-    height: 50px !important;
+    width: 150px !important;
+    height: 150px !important;
 }
 
 dotlottie-player {
@@ -79,11 +79,25 @@ dotlottie-player {
     animation: fadeIn 0.8s ease-out;
 }
 
+.prompts-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding: 10px 0;
+    margin: 20px 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.prompts-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
 .prompt-row {
     display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 15px;
+    padding: 0 20px;
+    width: max-content;
+    margin: 0 auto;
 }
 
 .prompt-container {
@@ -94,7 +108,7 @@ dotlottie-player {
     border: 1px solid #3a3a3a;
     text-align: center;
     min-width: 180px;
-    max-width: 220px;
+    flex-shrink: 0;
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -103,13 +117,6 @@ dotlottie-player {
     background-color: #383838;
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
-
-.prompt-container p {
-    margin: 0;
-    color: #ffffff;
-    font-size: 1em;
-    line-height: 1.4;
 }
 
 .single-prompt {
