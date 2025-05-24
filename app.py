@@ -30,8 +30,6 @@ body, .gradio-container {
     background-color: #1A1A1A !important;
     color: white;
     font-family: 'Segoe UI', sans-serif;
-    height: 100vh !important;
-    overflow: hidden !important;
 }
 
 /* Hide all loading indicators */
@@ -53,9 +51,8 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto;
-    width: 120px !important;
-    height: 120px !important;
-    margin-bottom: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
 }
 
 dotlottie-player {
@@ -68,41 +65,36 @@ dotlottie-player {
     border: none !important;
     padding: 0 !important;
     transition: opacity 0.3s ease;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    overflow-y: auto !important;
-    height: calc(100vh - 400px) !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+    overflow-y: auto !important; /* Maintain scroll functionality */
+
 }
 
-/* Compact Intro Section */
+/* Intro section */
 #intro_container {
     text-align: center;
-    margin: 0 auto;
-    padding: 20px 0;
+    margin: 20px auto;
     max-width: 500px;
-    height: calc(100vh - 180px);
-    display: flex !important;
-    flex-direction: column;
-    justify-content: center;
+    animation: fadeIn 0.8s ease-out;
 }
 
-/* Prompt Containers Layout */
 .prompt-row {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin: 10px 0;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .prompt-container {
     background-color: #282828;
     border-radius: 15px;
-    padding: 15px;
+    padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid #3a3a3a;
     text-align: center;
-    min-width: 160px;
-    max-width: 180px;
+    min-width: 180px;
+    max-width: 220px;
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -116,7 +108,7 @@ dotlottie-player {
 .prompt-container p {
     margin: 0;
     color: #ffffff;
-    font-size: 0.9em;
+    font-size: 1em;
     line-height: 1.4;
 }
 
@@ -124,19 +116,48 @@ dotlottie-player {
     margin: 0 auto;
 }
 
-/* Fixed Input Container */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Message bubbles */
+.gr-message-bubble {
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    font-size: 15px;
+    margin: 8px 0;
+    opacity: 0;
+    animation: messageAppear 0.4s forwards;
+    max-width: 80%;
+}
+
+@keyframes messageAppear {
+    to { opacity: 1; }
+}
+
+.gr-message-user {
+    background-color: #007BFF !important;
+    color: white !important;
+    align-self: flex-end;
+    animation-delay: 0.1s;
+}
+
+.gr-message-bot {
+    background-color: #2C2C2C !important;
+    color: white !important;
+    animation-delay: 0.2s;
+}
+
+/* Input container */
 #input_container {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 600px;
+    position: relative;
     background-color: #2C2C2C;
     border: 1px solid #444;
     border-radius: 25px;
+    margin: 20px auto;
+    max-width: 600px;
     transition: all 0.3s ease;
-    z-index: 1000;
 }
 
 #input_container:focus-within {
@@ -187,82 +208,39 @@ dotlottie-player {
     transform: translateY(-50%) scale(1.1) !important;
 }
 
-/* Message bubbles */
-.gr-message-bubble {
-    border-radius: 16px !important;
-    padding: 12px 16px !important;
-    font-size: 15px;
-    margin: 8px 0;
-    opacity: 0;
-    animation: messageAppear 0.4s forwards;
-    max-width: 80%;
+/* Generic fallback to hide any floating scroll-to-bottom button */
+button[aria-label="Scroll to bottom"] {
+    display: none !important;
 }
+"""
 
-.gr-message-user {
-    background-color: #007BFF !important;
-    color: white !important;
-    align-self: flex-end;
-    animation-delay: 0.1s;
-}
-
-.gr-message-bot {
-    background-color: #2C2C2C !important;
-    color: white !important;
-    animation-delay: 0.2s;
-}
-
-@keyframes messageAppear {
-    to { opacity: 1; }
-}
-
-/* Top Icons */
-.top-icons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 30px;
-    padding: 10px 20px;
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 1000;
-}
-
-.top-icons button,
-.top-icons a {
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-.top-icons button:hover svg,
-.top-icons a:hover svg {
-    transform: scale(1.3) rotate(5deg);
-}
-
-.top-icons svg {
-    fill: #ffffff;
-    width: 28px;
-    height: 28px;
-    transition: transform 0.3s ease;
-}
-
-/* Info Modal */
-#info_modal {
-    display: none;
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #2C2C2C;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    z-index: 9999;
-    max-width: 400px;
-}
-
+# --- Gradio UI ---
+with gr.Blocks(css=custom_css) as demo:
+    gr.HTML("""
+<style>
+    .top-icons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 30px;
+        padding: 10px 20px;
+    }
+    .top-icons button,
+    .top-icons a {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .top-icons button:hover svg,
+    .top-icons a:hover svg {
+        transform: scale(1.3) rotate(5deg);
+    }
+    .top-icons svg {
+        fill: #ffffff;
+        width: 28px;
+        height: 28px;
+        transition: transform 0.3s ease;
+    }
 #info_modal h3 {
     color: #61dafb;
     margin-top: 0;
@@ -276,50 +254,61 @@ dotlottie-player {
     margin-bottom: 20px;
     color: #d0d0d0;
 }
-
-#info_modal button#close_modal {
-    margin-top: 12px;
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-#info_modal button#close_modal:hover {
-    background-color: #357ABD;
-    transform: scale(1.05);
-}
-
-/* Mobile Responsiveness */
-@media (max-height: 700px) {
-    #lottie_container {
-        height: 80px !important;
-        width: 80px !important;
+    #info_modal {
+        display: none;
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2C2C2C;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        z-index: 9999;
+        max-width: 400px;
     }
-    .prompt-container {
-        padding: 10px;
-        min-width: 140px;
+    #info_modal button#close_modal {
+        margin-top: 12px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
     }
-    .prompt-container p {
-        font-size: 0.8em;
+    #info_modal button#close_modal:hover {
+        background-color: #357ABD;
+        transform: scale(1.05);
     }
-}
-"""
+    .prompt-btn {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .prompt-btn:hover {
+        background-color: #357ABD;
+        transform: scale(1.05);
+    }
+</style>
 
-# --- Gradio UI ---
-with gr.Blocks(css=custom_css) as demo:
-    gr.HTML("""
 <!-- Top Right Icons -->
 <div class="top-icons">
+    <!-- Info Icon -->
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
         </svg>
     </button>
+
+    <!-- Download Icon -->
     <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
@@ -330,11 +319,12 @@ with gr.Blocks(css=custom_css) as demo:
 <!-- Info Modal -->
 <div id="info_modal">
     <h3>About This Agent</h3>
-    <p>This chatbot uses RAG and LLM tech to answer questions about Akshay Abraham's professional background. Ask about skills, experience, or career path!</p>
+    <p>This chatbot uses RAG and LLM tech to answer questions about Akshay Abraham’s professional background. Ask about skills, experience, or career path!</p>
     <button id="close_modal">Close</button>
 </div>
 
 <script>
+    // Show info modal on icon click
     document.getElementById('info_icon').onclick = () => {
         document.getElementById('info_modal').style.display = 'block';
     };
@@ -344,7 +334,7 @@ with gr.Blocks(css=custom_css) as demo:
 </script>
 """)
 
-    # 🤖 Compact Intro Section
+    # 🤖 Intro Section with Lottie + Example Prompts
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
         gr.HTML("""
         <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
@@ -360,24 +350,28 @@ with gr.Blocks(css=custom_css) as demo:
         </div>
         """)
         gr.Markdown("""
-        <div style='text-align: center; margin-bottom: 15px;'>
-        Hello! I'm <strong>Ressy 🤖</strong><br>
-        Ask about Akshay's profile
+        <div style='animation: fadeIn 0.8s ease-out; text-align: center;'>
+        Hello! I'm your AI assistant <strong>Ressy 🤖</strong><br>
+        Ready to explore Akshay's professional background!
         </div>
         """)
 
         gr.HTML("""
-        <div style="margin: 0 auto;">
+        <div style="margin-top: 24px; text-align: center;">
+            <!-- First Row - Two Questions -->
             <div class="prompt-row">
                 <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
-                    <p>Key skills?</p>
+                    <p>What are Akshay's key skills?</p>
                 </div>
-                <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about projects')">
-                    <p>Past projects?</p>
+                
+                <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay\\'s past projects.')">
+                    <p>Tell me about Akshay's past projects.</p>
                 </div>
             </div>
-            <div class="prompt-container single-prompt" onclick="fillPromptAndSubmit('What technologies used?')">
-                <p>Technologies used?</p>
+            
+            <!-- Second Row - Single Centered Question -->
+            <div class="prompt-container single-prompt" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
+                <p>What tools or frameworks has Akshay used?</p>
             </div>
         </div>
 
@@ -394,18 +388,18 @@ with gr.Blocks(css=custom_css) as demo:
         </script>
         """)
 
-    # 💬 Chatbot (initially hidden)
-    chatbot = gr.Chatbot(visible=False, elem_id="chatbot")
+    # 💬 Chatbot
+    chatbot = gr.Chatbot(visible=False, type="messages", height=400, elem_id="chatbot")
 
-    # ⌨️ Fixed Position Input
-    with gr.Row(elem_id="input_container"):
+    # ⌨️ Input Area
+    with gr.Column(elem_id="input_container"):
         msg = gr.Textbox(
             label="",
-            placeholder="Ask about Akshay...",
+            placeholder="Ask me anything about Akshay's profile...",
             container=False,
             elem_id="input_textbox",
             lines=1,
-            max_lines=3
+            max_lines=5
         )
         submit = gr.Button("➤", elem_id="send_button")
 
@@ -419,7 +413,7 @@ with gr.Blocks(css=custom_css) as demo:
         relevant_excerpts = semantic_search(message, retriever)
         bot_message = resume_chat_completion(
             client, 
-            "llama3-70b-8192", 
+            "llama-3.3-70b-versatile", 
             message, 
             relevant_excerpts
         )
@@ -439,7 +433,7 @@ with gr.Blocks(css=custom_css) as demo:
         bot_reply, chatbot, chatbot
     )
 
-    # 🔄 Auto-scroll and intro hiding
+    # 🔄 Scroll + Hide Intro
     gr.HTML("""
 <script>
     const observer = new MutationObserver(() => {
@@ -453,10 +447,21 @@ with gr.Blocks(css=custom_css) as demo:
         subtree: true
     });
 
-    document.querySelector("#input_textbox textarea").addEventListener("keydown", function(e) {
+    const textbox = document.querySelector("#input_textbox textarea");
+    const button = document.querySelector("#send_button");
+
+    function clearAndHideIntro() {
+        textbox.value = "";
+        const intro = document.querySelector("#intro_container");
+        const chatbot = document.querySelector("#chatbot");
+        if (intro) intro.style.display = "none";
+        if (chatbot) chatbot.style.display = "block";
+    }
+
+    button.addEventListener("click", clearAndHideIntro);
+    textbox.addEventListener("keydown", function(e) {
         if (e.key === "Enter" && !e.shiftKey) {
-            document.querySelector("#intro_container").style.display = "none";
-            document.querySelector("#chatbot").style.display = "block";
+            setTimeout(clearAndHideIntro, 10);
         }
     });
 </script>
