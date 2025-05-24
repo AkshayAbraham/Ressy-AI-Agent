@@ -233,6 +233,24 @@ with gr.Blocks(css=custom_css) as demo:
         border-radius: 6px;
         cursor: pointer;
     }
+
+    #info_modal button#close_modal {
+        margin-top: 12px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    #info_modal button#close_modal:hover {
+        background-color: #357ABD;
+        transform: scale(1.05);
+    }
+
 </style>
 
 <div class="top-icons">
