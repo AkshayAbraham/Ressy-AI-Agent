@@ -335,7 +335,7 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <a id="download_icon" href="/file=files/resume.pdf" title="Download Resume" download>
+    <a id="download_icon" href="/file=data/resume.txt" title="Download Resume" download>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
@@ -347,12 +347,12 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
+        Ressy is powered by cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers. 🔍✨
         <br><br>
         What can I help you discover? 💡
         <ul>
-            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
-            <li>Project Showcase: Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
+            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS), and various tools and frameworks.</li>
+            <li>Project Showcase: Explore detailed information about his impactful projects, including customer churn prediction 📉 and NLP-based sentiment analysis 💬.</li>
             <li>Experience & Impact: Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
             <li>Career Trajectory: Understand his career path and future aspirations. 🌟</li>
         </ul>
