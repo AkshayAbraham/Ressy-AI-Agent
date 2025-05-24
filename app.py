@@ -185,30 +185,26 @@ with gr.Blocks(css=custom_css) as demo:
     .top-icons {
         display: flex;
         justify-content: flex-end;
-        gap: 25px;
+        gap: 30px;
         padding: 10px 20px;
     }
-
     .top-icons button,
     .top-icons a {
         background: none;
         border: none;
         cursor: pointer;
-        transition: transform 0.2s ease;
+        transition: transform 0.3s ease;
     }
-
     .top-icons button:hover svg,
     .top-icons a:hover svg {
-        transform: scale(1.2);
+        transform: scale(1.3) rotate(5deg);
     }
-
     .top-icons svg {
         fill: #ffffff;
         width: 28px;
         height: 28px;
-        transition: transform 0.2s ease;
+        transition: transform 0.3s ease;
     }
-
     #info_modal {
         display: none;
         position: fixed;
@@ -223,17 +219,6 @@ with gr.Blocks(css=custom_css) as demo:
         z-index: 9999;
         max-width: 400px;
     }
-
-    #info_modal button {
-        margin-top: 10px;
-        background-color: #007BFF;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
     #info_modal button#close_modal {
         margin-top: 12px;
         background-color: #4a90e2;
@@ -245,14 +230,13 @@ with gr.Blocks(css=custom_css) as demo:
         cursor: pointer;
         transition: background-color 0.2s ease, transform 0.2s ease;
     }
-
     #info_modal button#close_modal:hover {
         background-color: #357ABD;
         transform: scale(1.05);
     }
-
 </style>
 
+<!-- Top Right Icons -->
 <div class="top-icons">
     <!-- Info Icon -->
     <button id="info_icon" title="About Agent">
@@ -273,7 +257,7 @@ with gr.Blocks(css=custom_css) as demo:
 <div id="info_modal">
     <h3>About This Agent</h3>
     <p>This chatbot uses RAG and LLM tech to answer questions about Akshay Abraham’s professional background. Ask about skills, experience, or career path!</p>
-    <button onclick="document.getElementById('info_modal').style.display='none'">Close</button>
+    <button id="close_modal">Close</button>
 </div>
 
 <script>
@@ -281,10 +265,11 @@ with gr.Blocks(css=custom_css) as demo:
     document.getElementById('info_icon').onclick = () => {
         document.getElementById('info_modal').style.display = 'block';
     };
+    document.getElementById('close_modal').onclick = () => {
+        document.getElementById('info_modal').style.display = 'none';
+    };
 </script>
 """)
-
-
 
     # 🤖 Lottie Animation Intro
     with gr.Column(visible=True, elem_id="intro_container") as intro_section:
@@ -323,7 +308,7 @@ with gr.Blocks(css=custom_css) as demo:
         )
         submit = gr.Button("➤", elem_id="send_button")
 
-# --- Respond logic split in two parts ---
+    # --- Respond logic split ---
     def user_submit(message, chat_history):
         chat_history.append({"role": "user", "content": message})
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
@@ -353,23 +338,22 @@ with gr.Blocks(css=custom_css) as demo:
         bot_reply, chatbot, chatbot
     )
 
-    # 🧠 JS for UI behavior
+    # 🧠 UI behavior (scroll, hide intro)
     gr.HTML("""
 <script>
-    // Smooth auto-scroll to bottom of chatbot
+    // Auto-scroll
     const observer = new MutationObserver(() => {
         const bot = document.querySelector("#chatbot");
         if (bot) {
             bot.scrollTo({ top: bot.scrollHeight, behavior: "smooth" });
         }
     });
-
     observer.observe(document.querySelector("#chatbot"), {
         childList: true,
         subtree: true
     });
 
-    // Clear textbox on send (button or Enter)
+    // Clear + hide intro on message send
     const textbox = document.querySelector("#input_textbox textarea");
     const button = document.querySelector("#send_button");
 
@@ -381,10 +365,7 @@ with gr.Blocks(css=custom_css) as demo:
         if (chatbot) chatbot.style.display = "block";
     }
 
-    // Clear on button click
     button.addEventListener("click", clearAndHideIntro);
-
-    // Clear on Enter key
     textbox.addEventListener("keydown", function(e) {
         if (e.key === "Enter" && !e.shiftKey) {
             setTimeout(clearAndHideIntro, 10);
