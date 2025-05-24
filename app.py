@@ -32,6 +32,12 @@ body, .gradio-container {
     font-family: 'Segoe UI', sans-serif;
 }
 
+/* Hide Scrollbars */
+#chatbot::-webkit-scrollbar {
+    width: 0 !important;
+    background: transparent !important;
+}
+
 /* Hide all loading indicators */
 .progress-bar, .animate-spin, .processing-time, 
 [data-testid="progress-bar"], .progress, 
@@ -59,6 +65,8 @@ dotlottie-player {
     border: none !important;
     padding: 0 !important;
     transition: opacity 0.3s ease;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
 }
 
 /* Intro section */
