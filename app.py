@@ -237,6 +237,9 @@ button[aria-label="Scroll to bottom"] {
 
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
+    # MODIFIED: Define a gr.File component to serve the PDF
+    pdf_viewer = gr.File(value="data/resume.pdf", visible=False, file_count="single")
+
     gr.HTML("""
 <style>
     /* This style block within gr.HTML is not best practice for external CSS.
@@ -355,7 +358,7 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <a id="download_icon" href="/file=data/resume.pdf" title="View Resume" target="_blank" rel="noopener noreferrer">
+    <a id="download_icon" href="#" title="View Resume" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
@@ -367,12 +370,12 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with accurate, relevant, and insightful answers. 🔍✨
+        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
         <br><br>
         What can I help you discover? 💡
         <ul>
-            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️, and various tools and frameworks.</li>
-            <li>Project Showcase: Explore detailed information about his impactful projects, including customer churn prediction 📉 and NLP-based sentiment analysis 💬.</li>
+            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
+            <li>Project Showcase: Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
             <li>Experience & Impact: Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
             <li>Career Trajectory: Understand his career path and future aspirations. 🌟</li>
         </ul>
@@ -382,7 +385,7 @@ with gr.Blocks(css=custom_css) as demo:
     </p>
 
     <div class="disclaimer">
-        ⚠️ Important Note: As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="YOUR_AKSHAY_ABRAHAM_LINKEDIN_URL_HERE" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
+        ⚠️ **Important Note:** As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="YOUR_AKSHAY_ABRAHAM_LINKEDIN_URL_HERE" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
     </div>
 
     <button id="close_modal">Close</button>
@@ -396,6 +399,21 @@ with gr.Blocks(css=custom_css) as demo:
     document.getElementById('close_modal').onclick = () => {
         document.getElementById('info_modal').style.display = 'none';
     };
+
+    // MODIFIED: Script to get Gradio File URL and update the link
+    // This script runs after Gradio components are rendered.
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const fileElem = document.querySelector('#pdf_viewer_file .file-preview a'); // Targeting the link within the hidden gr.File component
+        const downloadIcon = document.getElementById('download_icon');
+
+        if (fileElem && downloadIcon) {
+            // Get the generated URL from the hidden gr.File component
+            const pdfUrl = fileElem.href;
+            if (pdfUrl) {
+                downloadIcon.href = pdfUrl; // Set the href of your icon to this URL
+            }
+        }
+    });
 </script>
 """)
 
