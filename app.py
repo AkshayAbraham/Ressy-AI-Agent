@@ -291,12 +291,32 @@ with gr.Blocks(css=custom_css) as demo:
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0,0,0,0.4);
         z-index: 9999;
-        max-width: 600px; /* Increased max-width for wider modal */
-        width: 90%; /* Added a percentage width for responsiveness */
+        max-width: 650px; /* Increased max-width further for more space */
+        width: 90%; /* Maintain percentage width for responsiveness */
         max-height: 80vh; /* Set a max height relative to viewport height */
         overflow-y: auto; /* Enable internal scrolling if content overflows */
         box-sizing: border-box; /* Include padding in height calculation */
     }
+
+    #info_modal .disclaimer {
+        font-size: 0.9em;
+        color: #aaaaaa;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px dashed #444;
+        text-align: center;
+    }
+
+    #info_modal .disclaimer a {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    #info_modal .disclaimer a:hover {
+        text-decoration: underline;
+    }
+
     #info_modal button#close_modal {
         margin-top: 12px;
         background-color: #4a90e2;
@@ -335,7 +355,7 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <a id="download_icon" href="/file=data/resume.txt" title="Download Resume" download>
+    <a id="download_icon" href="/file=files/resume.pdf" title="View Resume" target="_blank" rel="noopener noreferrer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
@@ -347,11 +367,11 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers. 🔍✨
+        Ressy is powered by cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with accurate, relevant, and insightful answers. 🔍✨
         <br><br>
         What can I help you discover? 💡
         <ul>
-            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS), and various tools and frameworks.</li>
+            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️, and various tools and frameworks.</li>
             <li>Project Showcase: Explore detailed information about his impactful projects, including customer churn prediction 📉 and NLP-based sentiment analysis 💬.</li>
             <li>Experience & Impact: Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
             <li>Career Trajectory: Understand his career path and future aspirations. 🌟</li>
@@ -360,9 +380,11 @@ with gr.Blocks(css=custom_css) as demo:
         <br><br>
         Ready to start exploring? Ask away! 💬
     </p>
+
     <div class="disclaimer">
-        ⚠️ **Important Note:** As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="YOUR_AKSHAY_ABRAHAM_LINKEDIN_URL_HERE" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
+        ⚠️ Important Note: As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="YOUR_AKSHAY_ABRAHAM_LINKEDIN_URL_HERE" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
     </div>
+
     <button id="close_modal">Close</button>
 </div>
 
