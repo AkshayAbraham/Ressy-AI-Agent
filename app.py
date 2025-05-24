@@ -79,6 +79,51 @@ dotlottie-player {
     animation: fadeIn 0.8s ease-out;
 }
 
+/* Prompt Suggestions Wrapper - Outer Wrapper */
+#example_prompts_wrapper {
+    display: flex;
+    justify-content: center; /* Center the entire set of containers */
+    gap: 20px; /* Space between individual prompt containers */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    margin-top: 30px;
+    max-width: 700px; /* Adjust as needed */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Individual Prompt Container */
+.prompt-container {
+    background-color: #282828; /* Base background for the container */
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid #3a3a3a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    align-items: center;
+    text-align: center;
+    flex: 1; /* Allows containers to grow/shrink */
+    min-width: 180px; /* Minimum width for each container */
+    max-width: 220px; /* Maximum width for each container */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; /* Indicates it's clickable */
+}
+
+.prompt-container:hover {
+    background-color: #383838; /* Darker gray/black on hover */
+    transform: translateY(-5px); /* Slight lift effect */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5); /* More pronounced shadow */
+}
+
+.prompt-container p {
+    font-weight: normal; /* Changed to normal, bold already on text */
+    margin: 0; /* Remove default paragraph margin */
+    color: #ffffff;
+    font-size: 1em;
+    line-height: 1.4;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -204,6 +249,19 @@ with gr.Blocks(css=custom_css) as demo:
         height: 28px;
         transition: transform 0.3s ease;
     }
+#info_modal h3 {
+    color: #61dafb;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+#info_modal p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #d0d0d0;
+}
     #info_modal {
         display: none;
         position: fixed;
@@ -321,10 +379,15 @@ with gr.Blocks(css=custom_css) as demo:
             <p style="font-weight: bold; margin-bottom: 12px; color: #ffffff; text-align: center;">
                 💡 Example Questions:
             </p>
-            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                <button class="prompt-btn" onclick="fillPrompt('What are Akshay\\'s key skills?')">What are Akshay's key skills?</button>
-                <button class="prompt-btn" onclick="fillPrompt('Tell me about Akshay’s past projects.')">Tell me about Akshay’s past projects.</button>
-                <button class="prompt-btn" onclick="fillPrompt('What tools or frameworks has Akshay used?')">What tools or frameworks has Akshay used?</button>
+            <div id="example_prompts_wrapper">
+            <div class="prompt-container" onclick="fillPromptAndSubmit('What are Akshay\\'s key skills?')">
+                <p>What are Akshay's key skills?</p>
+            </div>
+            <div class="prompt-container" onclick="fillPromptAndSubmit('Tell me about Akshay’s past projects.')">
+                <p>Tell me about Akshay’s past projects.</p>
+            </div>
+            <div class="prompt-container" onclick="fillPromptAndSubmit('What tools or frameworks has Akshay used?')">
+                <p>What tools or frameworks has Akshay used?</p>
             </div>
         </div>
 
