@@ -333,6 +333,11 @@ with gr.Blocks(css=custom_css) as demo:
                 const textbox = document.querySelector("#input_textbox textarea");
                 textbox.value = text;
                 textbox.focus();
+                textbox.dispatchEvent(new Event('input', { bubbles: true })); // Trigger input event for Gradio to recognize change
+                const submitButton = document.querySelector("#send_button");
+                if (submitButton) {
+                    submitButton.click(); // Simulate a click on the submit button
+                }
             }
         </script>
         """)
