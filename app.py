@@ -79,31 +79,6 @@ dotlottie-player {
     animation: fadeIn 0.8s ease-out;
 }
 
-/* Prompt Suggestions Wrapper - Outer Wrapper */
-#example_prompts_wrapper {
-    display: flex;
-    justify-content: center; /* Center the entire set of containers */
-    gap: 20px; /* Space between individual prompt containers */
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    margin-top: 30px;
-    max-width: 700px; /* Adjust as needed */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Container for the three individual prompt boxes */
-/* This will now directly hold the prompt-container elements */
-#example_prompts_direct_container {
-    display: flex;
-    justify-content: center; /* Center the entire set of containers */
-    gap: 20px; /* Space between individual prompt containers */
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    margin-top: 30px; /* Adjust margin from the intro text */
-    max-width: 700px; /* Adjust as needed */
-    margin-left: auto;
-    margin-right: auto;
-}
-
 /* Individual Prompt Container */
 .prompt-container {
     background-color: #282828; /* Base background for the container */
@@ -111,7 +86,7 @@ dotlottie-player {
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid #3a3a3a;
-    display: flex;
+    display: inline-block;
     flex-direction: column;
     justify-content: center; /* Center content vertically */
     align-items: center;
