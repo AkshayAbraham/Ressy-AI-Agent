@@ -511,16 +511,17 @@ with gr.Blocks(css=custom_css) as demo:
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
     def bot_reply(chat_history):
-        message = chat_history[-1]["content"]
-        relevant_excerpts = semantic_search(message, retriever)
-        bot_message = resume_chat_completion(
-            client,
-            "llama-3.3-70b-versatile",
-            message,
-            relevant_excerpts
-        )
-        chat_history.append({"role": "assistant", "content": bot_message})
-        return chat_history
+    user_question = chat_history[-1]["content"] # Get the user's latest message
+
+    # Call your main `answer_question` function.
+    # This function already contains the logic to either:
+    # 1. Provide the hardcoded publication response (if triggered)
+    # 2. Or, run the semantic search and LLM completion (for other queries)
+    bot_message = answer_question(user_question) # This is the ONLY place you need to get the bot_message
+
+    # Append the final bot message to the chat history
+    chat_history.append({"role": "assistant", "content": bot_message})
+    return chat_history
 
     # 📩 Bind Events
     submit.click(
