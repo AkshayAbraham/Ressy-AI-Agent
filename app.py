@@ -5,6 +5,7 @@ from utils import (
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
+    get_publications  # Add this import
 )
 import os
 from groq import Groq
@@ -499,6 +500,15 @@ with gr.Blocks(css=custom_css) as demo:
     def bot_reply(chat_history):
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
+    
+        # Check if the question is about publications/research
+        if any(keyword in message.lower() for keyword in ["publication", "research", "paper"]):
+            publications = get_publications()
+            publications_text = "\n".join(
+                [f"- {pub['title']} ({pub['link']})" for pub in publications]
+            )
+            relevant_excerpts += f"\n\nAdditional Publications:\n{publications_text}"
+    
         bot_message = resume_chat_completion(
             client,
             "llama-3.3-70b-versatile",

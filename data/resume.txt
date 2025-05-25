@@ -109,9 +109,13 @@ Project management, Communication, Teamwork, Problem solving, Logical Thinking, 
 
 ---
 
-Research Publications
-1.Published a research paper on the design and validation of novel SARS-CoV-2 inhibitors using artificial intelligence and bioinformatics methods, including molecular docking and molecular dynamics simulations. https://doi.org/10.1039/D4ME00062E
-2.Published a periodic table mobile app in Amazon app store. https://www.amazon.com/dp/B08BYHLBX8/ref=apps_sf_sta
+=== RESEARCH PUBLICATIONS ===
+1. Published a research paper on the design and validation of novel SARS-CoV-2 inhibitors using AI and bioinformatics methods.
+   DOI: https://doi.org/10.1039/D4ME00062E
+
+2. Published a periodic table mobile app.
+   Link: https://www.amazon.com/dp/B08BYHLBX8/ref=apps_sf_sta
+
 
 ---
 
