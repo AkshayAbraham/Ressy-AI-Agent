@@ -266,18 +266,18 @@ with gr.Blocks(css=custom_css) as demo:
     )
 
     with gr.Column(visible=False) as suggestion_section:
-        with gr.Box():  # Added Box for better visual grouping
-            gr.Markdown("### Send Your Feedback")
-            suggestion_box = gr.Textbox(
-                label="Your suggestion", 
-                lines=3, 
-                max_lines=5, 
-                placeholder="Type your feedback here..."
-            )
-            with gr.Row():
-                suggestion_button = gr.Button("Submit", variant="primary")
-                close_button = gr.Button("Close")
-            suggestion_status = gr.Textbox(label="Status", interactive=False)
+    with gr.Column():  # Replaced Box with Column
+        gr.Markdown("### Send Your Feedback")
+        suggestion_box = gr.Textbox(
+            label="Your suggestion", 
+            lines=3, 
+            max_lines=5, 
+            placeholder="Type your feedback here..."
+        )
+        with gr.Row():
+            suggestion_button = gr.Button("Submit", variant="primary")
+            close_button = gr.Button("Close")
+        suggestion_status = gr.Textbox(label="Status", interactive=False)
 
     # MODIFIED: Event handling
     def toggle_suggestion_section():
@@ -341,6 +341,13 @@ with gr.Blocks(css=custom_css) as demo:
         width: 28px;
         height: 28px;
         transition: transform 0.3s ease;
+    }
+    .gradio-container .suggestion-box {
+        background: #282828 !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+        margin: 10px 0 !important;
+        border: 1px solid #3a3a3a !important;
     }
 #info_modal h3 {
     color: #61dafb;
