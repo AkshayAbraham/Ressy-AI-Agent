@@ -191,13 +191,11 @@ dotlottie-player {
     background-color: #007BFF !important;
     color: white !important;
     align-self: flex-end;
-    animation-delay: 0.1s;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
-    animation-delay: 0.2s;
 }
 
 /* Input container */
@@ -274,7 +272,7 @@ button[aria-label="Scroll to bottom"] {
 
 /* NEW: Telegram Modal Styles */
 #telegram_modal {
-    display: none;
+    display: none; /* Initially hidden */
     position: fixed;
     top: 50%;
     left: 50%;
@@ -377,6 +375,45 @@ button[aria-label="Scroll to bottom"] {
     min-height: 20px; /* Reserve space */
 }
 
+/* TOP ICON STYLES (Crucial for sizing and color) */
+.top-icons {
+    display: flex;
+    justify-content: flex-end; /* Align to the right */
+    gap: 15px; /* Space between icons */
+    padding: 10px 20px; /* Padding for the container */
+    background-color: #1A1A1A; /* Ensure consistent background */
+    position: relative;
+    z-index: 10;
+}
+
+.top-icons button,
+.top-icons a {
+    background: none;
+    border: none;
+    padding: 0; /* Remove default padding from buttons */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex; /* To center SVG if button has padding */
+    align-items: center;
+    justify-content: center;
+}
+
+.top-icons button:hover,
+.top-icons a:hover {
+    transform: scale(1.1);
+}
+
+.top-icons svg {
+    width: 28px; /* Adjust size as needed */
+    height: 28px; /* Adjust size as needed */
+    fill: #e0e0e0; /* Light gray for visibility on dark background */
+    transition: fill 0.2s ease;
+}
+
+.top-icons button:hover svg,
+.top-icons a:hover svg {
+    fill: #ffffff; /* White on hover */
+}
 """
 
 # --- Gradio UI ---
@@ -389,11 +426,6 @@ with gr.Blocks(css=custom_css) as demo:
     )
 
     gr.HTML(f"""
-<style>
-    /* Ensure modals are hidden by default */
-    #info_modal, #telegram_modal {{ display: none; }}
-</style>
-
 <div class="top-icons">
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -460,25 +492,36 @@ with gr.Blocks(css=custom_css) as demo:
 
 <script>
     // Show info modal on icon click
-    document.getElementById('info_icon').onclick = () => {{ /* Escaped */
+    document.getElementById('info_icon').onclick = (event) => {{ /* Added event parameter */
+        event.preventDefault(); /* Prevent default button behavior (e.g., form submission) */
+        event.stopPropagation(); /* Stop event from bubbling up to parent elements */
         document.getElementById('info_modal').style.display = 'block';
     }}; /* Escaped */
-    document.getElementById('close_modal').onclick = () => {{ /* Escaped */
+    document.getElementById('close_modal').onclick = (event) => {{
+        event.preventDefault();
+        event.stopPropagation();
         document.getElementById('info_modal').style.display = 'none';
     }}; /* Escaped */
 
     // NEW: Show Telegram modal on icon click
-    document.getElementById('telegram_icon').onclick = () => {{ /* Escaped */
+    document.getElementById('telegram_icon').onclick = (event) => {{ /* Added event parameter */
+        event.preventDefault(); /* Prevent default button behavior */
+        event.stopPropagation(); /* Stop event from bubbling up */
         document.getElementById('telegram_modal').style.display = 'block';
         // Clear status message on open
         document.getElementById('telegram_status_message').textContent = '';
+        document.getElementById('telegram_sender_name_input').value = ''; // Clear inputs
+        document.getElementById('telegram_message_content_input').value = '';
     }}; /* Escaped */
-    document.getElementById('close_telegram').onclick = () => {{ /* Escaped */
+    document.getElementById('close_telegram').onclick = (event) => {{
+        event.preventDefault();
+        event.stopPropagation();
         document.getElementById('telegram_modal').style.display = 'none';
         document.getElementById('telegram_status_message').textContent = '';
     }}; /* Escaped */
 
     // MODIFIED: Script to get Gradio File URL for download and update the link
+    // The download icon itself is an <a> tag, so its default behavior is desired.
     document.addEventListener('DOMContentLoaded', (event) => {{ /* Escaped */
         setTimeout(() => {{ /* Escaped */
             const fileContainer = document.getElementById('pdf_file_component');
@@ -713,4 +756,3 @@ with gr.Blocks(css=custom_css) as demo:
 # 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
-    
