@@ -5,7 +5,6 @@ from utils import (
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
-    get_publications,
 )
 import os
 from groq import Groq
@@ -25,19 +24,6 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-def answer_question(user_input):
-    # ✅ Rule-based fallback for publications
-    if "publication" in user_input.lower() or "research paper" in user_input.lower():
-        print("🧠 Triggered hardcoded publication response.")
-        publications = get_publications()
-        formatted = "\n\n".join([f"• **{p['title']}**\n🔗 {p['link']}" for p in publications])
-        return f"Here are Akshay Abraham's publications:\n\n{formatted}"
-
-    # Proceed with normal RAG pipeline
-    relevant = semantic_search(user_input, retriever)
-    response = resume_chat_completion(client, "mixtral-8x7b-32768", user_input, relevant)
-    return response
-    
 # --- Custom CSS ---
 custom_css = """
 body, .gradio-container {
@@ -511,16 +497,14 @@ with gr.Blocks(css=custom_css) as demo:
         return "", chat_history, gr.update(visible=False), gr.update(visible=True)
 
     def bot_reply(chat_history):
-        # All lines below this 'def' must be indented
-        user_question = chat_history[-1]["content"] # Get the user's latest message
-
-        # Call your main `answer_question` function.
-        # This function already contains the logic to either:
-        # 1. Provide the hardcoded publication response (if triggered)
-        # 2. Or, run the semantic search and LLM completion (for other queries)
-        bot_message = answer_question(user_question) # This is the ONLY place you need to get the bot_message
-
-        # Append the final bot message to the chat history
+        message = chat_history[-1]["content"]
+        relevant_excerpts = semantic_search(message, retriever)
+        bot_message = resume_chat_completion(
+            client,
+            "llama-3.3-70b-versatile",
+            message,
+            relevant_excerpts
+        )
         chat_history.append({"role": "assistant", "content": bot_message})
         return chat_history
 
