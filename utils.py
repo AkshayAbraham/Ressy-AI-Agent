@@ -41,6 +41,21 @@ def semantic_search(prompt, retriever):
     for idx, doc in enumerate(results, 1):
         final += doc.page_content + "\n\n"
     return final
+def get_publications():
+    """
+    Return a list of hardcoded publication data.
+    """
+    return [
+        {
+            "title": "Design and validation of novel SARS-CoV-2 inhibitors using artificial intelligence and bioinformatics methods",
+            "link": "https://doi.org/10.1039/D4ME00062E"
+        },
+        {
+            "title": "Periodic Table Mobile App (Amazon App Store)",
+            "link": "https://www.amazon.com/dp/B08BYHLBX8"
+        }
+    ]
+
 
 def resume_chat_completion(client, model, user_question, relevant_excerpts):
     """
@@ -77,6 +92,7 @@ def resume_chat_completion(client, model, user_question, relevant_excerpts):
         ],
         model=model,
     )
+    
     # Extract the response from the chat completion
     response = chat_completion.choices[0].message.content
     return response
