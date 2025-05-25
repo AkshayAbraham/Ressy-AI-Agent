@@ -30,21 +30,31 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 # Function to send message to Telegram
-def send_telegram_message(message):
+def send_telegram_suggestion_api(message: str) -> str:
+    """Sends a suggestion message to Telegram."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return "❌ Telegram integration not configured on the server."
+
     if not message.strip():
-        return "Please enter a suggestion before submitting."
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": f"New Suggestion Received:\n\n{message}"
-    }
+        return "❌ Please enter a suggestion before submitting."
+
+    telegram_message_text = f"New Suggestion Received:\n\n{message}"
+
     try:
-        response = requests.post(url, data=data)
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": telegram_message_text
+        }
+
+        response = requests.post(url, json=payload)
         if response.status_code == 200:
             return "✅ Suggestion sent successfully!"
         else:
-            return "❌ Failed to send. Try again later."
+            print(f"Telegram API Error: {response.status_code} - {response.text}")
+            return f"❌ Failed to send. Server response: {response.status_code} - {response.text}"
     except Exception as e:
+        print(f"Error sending Telegram message: {str(e)}")
         return f"❌ Error: {str(e)}"
 
 
