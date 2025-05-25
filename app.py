@@ -26,6 +26,9 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 # Function to send message to Telegram
 def send_telegram_message(message):
     if not message.strip():
