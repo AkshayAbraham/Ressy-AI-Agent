@@ -8,6 +8,7 @@ from utils import (
     get_publications  # Add this import
 )
 import os
+import requests
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -24,6 +25,27 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 # --- Setup LLM (Groq) ---
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+# Function to send message to Telegram
+def send_telegram_message(message: str):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return "Telegram configuration missing."
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": f"📬 New Suggestion:\n\n{message}",
+        "parse_mode": "HTML",
+    }
+
+    try:
+        response = requests.post(url, data=payload)
+        if response.status_code == 200:
+            return "✅ Suggestion sent successfully!"
+        else:
+            return f"❌ Failed to send: {response.text}"
+    except Exception as e:
+        return f"⚠️ Error: {e}"
 
 # --- Custom CSS ---
 custom_css = """
@@ -247,6 +269,24 @@ with gr.Blocks(css=custom_css) as demo:
         file_count="single",
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
+with gr.Blocks() as demo:
+    gr.Markdown("## 🤖 AI Chatbot with Suggestion Box")
+
+    chatbot = gr.Chatbot()
+    user_input = gr.Textbox(label="Your Message")
+    send_button = gr.Button("Send")
+
+    suggestion_box = gr.Textbox(label="Send a Suggestion to the Developer")
+    suggestion_button = gr.Button("Submit Suggestion")
+    suggestion_status = gr.Textbox(label="Status", interactive=False)
+
+    history = gr.State([])
+
+    # Chatbot interaction
+    send_button.click(fn=chat, inputs=[user_input, history], outputs=[chatbot, history])
+
+    # Suggestion submission
+    suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
 
     gr.HTML("""
 <style>
