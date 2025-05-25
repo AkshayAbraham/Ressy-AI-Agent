@@ -28,6 +28,7 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def answer_question(user_input):
     # ✅ Rule-based fallback for publications
     if "publication" in user_input.lower() or "research paper" in user_input.lower():
+        print("🧠 Triggered hardcoded publication response.")
         publications = get_publications()
         formatted = "\n\n".join([f"• **{p['title']}**\n🔗 {p['link']}" for p in publications])
         return f"Here are Akshay Abraham's publications:\n\n{formatted}"
