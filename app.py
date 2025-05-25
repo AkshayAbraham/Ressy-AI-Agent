@@ -502,7 +502,16 @@ with gr.Blocks(css=custom_css) as demo:
         relevant_excerpts = semantic_search(message, retriever)
     
         # Check if the question is about publications/research
-        if any(keyword in message.lower() for keyword in ["publication", "research", "paper"]):
+        if any(keyword in message.lower() for keyword in [
+                    "publication", "publications", "published",
+                    "research", "researches", 
+                    "paper", "papers", 
+                    "article", "articles",
+                    "journal", "journals",
+                    "author", "authored",
+                    "contribution", "contributions",
+                    "cite", "citation", "citations"
+                ]):
             publications = get_publications()
             publications_text = "\n".join(
                 [f"- {pub['title']} ({pub['link']})" for pub in publications]
