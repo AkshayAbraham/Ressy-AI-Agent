@@ -1,82 +1,70 @@
 from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema import Document
+import os
 
+# ----------------------------
+# 1. Load Embedding Model
+# ----------------------------
 def setup_embedding_model(model_name: str):
-    """
-    Setup embedding model for RAG chatbot.
-    Returns:
-        Embedding_model: HuggingFaceEmbeddings object.
-    """
-    # Load embedding model
-    embedding_model = HuggingFaceEmbeddings(model_name=model_name)
-    return embedding_model
+    return HuggingFaceEmbeddings(model_name=model_name)
 
-def load_text_data(file_path: str):
-    """
-    Load text data from a file.
-    Args:
-        file_path (str): Path to the file.
-    Returns:
-        data (list): List of strings representing the text data.
-    """
-    try:
-        with open(file_path, "r") as file:
-            data = file.read()
-        return data
-    except FileNotFoundError:
-        raise FileNotFoundError(f"The file at {file_path} was not found.")
-    except Exception as e:
-        raise RuntimeError(f"An error occurred while reading the file: {e}")
+# ----------------------------
+# 2. Load Resume Text
+# ----------------------------
+def load_text_data(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"{file_path} does not exist.")
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
 
-def semantic_search(prompt, retriever):
-    """
-    Perform semantic search using the retriever.
-    :param prompt: str, The user query or prompt.
-    :param retriever: retriever object, Initialized retriever for the database.
-    :return: List of relevant documents.
-    """
-    # Query the retriever with the user prompt
+# ----------------------------
+# 3. Chunk Resume for Indexing
+# ----------------------------
+def chunk_text(text: str) -> list[str]:
+    splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", "\n", ".", " "],
+        chunk_size=1000,
+        chunk_overlap=100,
+    )
+    return splitter.split_text(text)
+
+# ----------------------------
+# 4. Create Vector Store
+# ----------------------------
+def create_vector_store(chunks: list[str], embedding_model):
+    return FAISS.from_texts(chunks, embedding_model)
+
+# ----------------------------
+# 5. Semantic Search
+# ----------------------------
+def semantic_search(prompt: str, retriever):
+    # Improve match chance for publications
+    if any(word in prompt.lower() for word in ["publication", "paper", "research", "doi"]):
+        prompt += " research paper, publication, DOI, Amazon, app store"
     results = retriever.get_relevant_documents(prompt)
-    final = ""
-    # Display the results
-    for idx, doc in enumerate(results, 1):
-        final += doc.page_content + "\n\n"
-    return final
+    return "\n\n".join([doc.page_content for doc in results])
 
+# ----------------------------
+# 6. Chat Completion (Groq/OpenAI-like)
+# ----------------------------
 def resume_chat_completion(client, model, user_question, relevant_excerpts):
-    """
-    Generate a response to the user's question using the pre-trained model.
-    Args:
-        client (Groq): Initialized Groq client.
-        model (str): The model to use for the chat completion.
-        user_question (str): The user's question.
-        relevant_excerpts (str): The relevant excerpts from the resume.
-    Returns:
-        response (str): The generated response to the user's question.
-    """
-    # Define the system prompt
     system_prompt = """
     You are an intelligent assistant named Ressy designed to answer queries about Akshay Abraham's professional background and experiences based on his resume.
-    Guidelines for generating responses:
+    Guidelines:
     - Only use information directly found in the provided resume excerpts.
-    - If the information is incomplete or ambiguous in the excerpts, inform the user that you lack sufficient data to answer.
-    - If a user asks a general or unrelated question (e.g., about something that isn't part of the resume), you should politely indicate that you can only respond related to Akshay's resume.
-    - Crucially, when asked about publications or research, clearly list any published papers or apps mentioned in the provided text. Include their full titles and associated links (like DOI or Amazon store URL) if they are present in the excerpts.
-    Please ensure that your answers are factual and reflect only the information available in the resume. Do not provide opinions or speculate beyond what is provided in the document.
+    - If unsure, say you lack sufficient data.
+    - If asked about publications, clearly list any mentioned papers or apps with full titles and links.
     """
-    # Generate a response to the user's question using the pre-trained model
     chat_completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
             {
                 "role": "user",
-                "content": "User Question: "
-                + user_question
-                + "\n Relevant Akshay's Resume/CV Exerpt(s): \n"
-                + relevant_excerpts,
+                "content": f"User Question: {user_question}\nRelevant Resume Excerpts:\n{relevant_excerpts}",
             },
         ],
         model=model,
     )
-    # Extract the response from the chat completion
-    response = chat_completion.choices[0].message.content
-    return response
+    return chat_completion.choices[0].message.content
