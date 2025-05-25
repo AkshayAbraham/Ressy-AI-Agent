@@ -5,6 +5,7 @@ from utils import (
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
+    get_publications,
 )
 import os
 from groq import Groq
