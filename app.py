@@ -510,7 +510,7 @@ with gr.Blocks(css=custom_css) as demo:
                     "journal", "journals",
                     "author", "authored",
                     "contribution", "contributions",
-                    "cite", "citation", "citations"
+                    "cite", "citations"
                 ]):
             publications = get_publications()
             publications_text = "\n".join(
