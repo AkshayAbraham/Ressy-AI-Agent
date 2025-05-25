@@ -41,10 +41,9 @@ def semantic_search(prompt, retriever):
     for idx, doc in enumerate(results, 1):
         final += doc.page_content + "\n\n"
     return final
+    
+# ✅ In utils.py
 def get_publications():
-    """
-    Return a list of hardcoded publication data.
-    """
     return [
         {
             "title": "Design and validation of novel SARS-CoV-2 inhibitors using artificial intelligence and bioinformatics methods",
