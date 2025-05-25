@@ -676,14 +676,23 @@ with gr.Blocks(css=custom_css) as demo:
         bot_reply, chatbot, chatbot
     )
 
-    # Custom API endpoint for Telegram message sending
-    gr.API(
-        name="send_message_telegram_api", # Optional: A name for internal reference
-        path="/send_message_telegram", # This path will be accessible as /run/send_message_telegram
-        methods=["POST"],
-        endpoint=send_message_telegram,
-        inputs=[gr.Textbox(label="Sender Name"), gr.Textbox(label="Message Content")],
-        outputs=[gr.Textbox(label="Status")]
+    # WORKAROUND for older Gradio versions: Expose send_message_telegram via a hidden component
+    # This creates the /run/send_message_telegram endpoint
+    hidden_telegram_inputs_name = gr.Textbox(visible=False)
+    hidden_telegram_inputs_message = gr.Textbox(visible=False)
+    hidden_telegram_outputs_status = gr.Textbox(visible=False)
+
+    # This hidden button's click event registers the function as a Gradio API endpoint.
+    # The `api_name` parameter ensures it's exposed under the name expected by your JavaScript.
+    hidden_telegram_trigger_button = gr.Button(
+        value="Hidden Telegram Trigger", # This value doesn't matter as the button is hidden
+        visible=False
+    )
+    hidden_telegram_trigger_button.click(
+        fn=send_message_telegram,
+        inputs=[hidden_telegram_inputs_name, hidden_telegram_inputs_message],
+        outputs=[hidden_telegram_outputs_status],
+        api_name="send_message_telegram" # This is CRITICAL for your JavaScript fetch call
     )
 
 
