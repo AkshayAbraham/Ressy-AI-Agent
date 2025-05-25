@@ -8,6 +8,7 @@ from utils import (
     get_publications  # Add this import
 )
 import os
+import requests
 from groq import Groq
 from dotenv import load_dotenv
 
