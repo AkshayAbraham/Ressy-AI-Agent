@@ -270,9 +270,6 @@ with gr.Blocks(css=custom_css) as demo:
         file_count="single",
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
-    # Suggestion Section
-    with gr.Row():
-        toggle_suggestion = gr.Button("💡 Suggest Something")
 
     with gr.Column(visible=False) as suggestion_section:
         suggestion_box = gr.Textbox(label="Send a Suggestion", lines=3, max_lines=5, placeholder="Type your feedback...")
@@ -281,8 +278,12 @@ with gr.Blocks(css=custom_css) as demo:
 
     def show_suggestion_box():
         return gr.update(visible=True)
+        
+    # Suggestion Section
+    with gr.Row(visible=False):  # Hide this section
+        submit_btn = gr.Button("Submit Suggestion", elem_id="submit_suggestion_btn")
+        submit_btn.click(fn=send_telegram_message, inputs=[suggestion_box], outputs=[suggestion_status])
 
-    toggle_suggestion.click(fn=show_suggestion_box, outputs=suggestion_section)
     suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
 
     # Auto-scroll and intro hide script
@@ -439,6 +440,13 @@ with gr.Blocks(css=custom_css) as demo:
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
     </a>
+
+    <button id="suggestion_icon" title="Send Suggestion">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+        </svg>
+    </button>
+
 </div>
 
 <div id="info_modal">
@@ -494,6 +502,10 @@ with gr.Blocks(css=custom_css) as demo:
             }
         }, 500); // 500ms delay: Give Gradio time to fully render its components.
     });
+    document.getElementById('suggestion_icon').onclick = () => {
+        const hiddenBtn = document.getElementById("submit_suggestion_btn");
+        if (hiddenBtn) hiddenBtn.click();
+    };
 </script>
 """)
 
