@@ -11,9 +11,8 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 
-# For Telegram Sending (Only this one remains)
-from telegram import Bot
-from telegram.error import TelegramError
+# For Telegram Sending
+import requests # Make sure requests is installed (pip install requests)
 
 # Create cache directory
 os.makedirs('.gradio/cached_examples', exist_ok=True)
@@ -26,47 +25,46 @@ db = Chroma.from_texts(chunks, embedding_model)
 retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
 # --- Setup LLM (Groq) ---
-load_dotenv() # Load environment variables from .env file (for local testing)
+load_dotenv() # Load environment variables from .env file
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # --- Telegram Configuration ---
-# These will be pulled from Hugging Face Secret Variables in deployment
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-telegram_bot = None
-if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-    try:
-        telegram_bot = Bot(token=TELEGRAM_BOT_TOKEN)
-        print("Telegram bot initialized successfully.")
-    except Exception as e:
-        print(f"Error initializing Telegram bot: {e}")
-        telegram_bot = None
-else:
+if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
     print("WARNING: TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID environment variables are not set. Telegram sending functionality will not work.")
     print("Please set them in your .env file locally, or as Secret Variables in Hugging Face Spaces.")
+else:
+    print("Telegram bot configuration loaded successfully.")
 
 # --- Telegram Sending Function ---
-async def send_message_telegram(sender_name, message_content):
-    if not telegram_bot or not TELEGRAM_CHAT_ID:
-        return "Telegram sending is not configured on the server. Please check server logs for details."
+# This function will be called by Gradio's backend via the API endpoint
+def send_telegram_message(sender_name, message_content):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return "Telegram integration not configured on the server."
 
     telegram_message = (
-        f"New Message from Ressy AI Resume Chatbot:\n\n"
+        f"New Message from Ressy AI Chatbot:\n\n"
         f"Sender Name: {sender_name}\n"
         f"Message:\n{message_content}"
     )
 
     try:
-        # send_message is an async function, so it needs to be awaited
-        await telegram_bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=telegram_message)
-        return "Message sent successfully via Telegram!"
-    except TelegramError as e:
-        print(f"Telegram API Error: {e}")
-        return f"Failed to send message via Telegram. Error: {e}"
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": telegram_message,
+            "parse_mode": "HTML"
+        }
+
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return "Message sent successfully via Telegram!"
+        else:
+            return f"Failed to send message: {response.text}"
     except Exception as e:
-        print(f"Error sending Telegram message: {e}")
-        return f"Failed to send message via Telegram. Unknown error: {e}"
+        return f"Error sending message: {str(e)}"
 
 # --- Custom CSS ---
 custom_css = """
@@ -274,35 +272,36 @@ button[aria-label="Scroll to bottom"] {
     -ms-overflow-style: none !important; /* IE/Edge */
 }
 
-/* NEW: Connect Modal Styles */
-#connect_modal {
+/* NEW: Telegram Modal Styles */
+#telegram_modal {
     display: none;
     position: fixed;
-    top: 10%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%); /* Centering */
     background: #2C2C2C;
     color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
     z-index: 9999;
-    max-width: 600px;
+    max-width: 450px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
     box-sizing: border-box;
+    border: 1px solid #4a4a4a;
 }
 
-#connect_modal h3 {
-    color: #61dafb;
+#telegram_modal h3 {
+    color: #0088cc; /* Telegram blue */
     margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.5em;
+    margin-bottom: 20px;
+    font-size: 1.6em;
     text-align: center;
 }
 
-#connect_modal p {
+#telegram_modal p {
     font-size: 1em;
     line-height: 1.6;
     margin-bottom: 20px;
@@ -310,96 +309,72 @@ button[aria-label="Scroll to bottom"] {
     text-align: center;
 }
 
-#connect_modal .contact-link {
-    color: #4a90e2;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-#connect_modal .contact-link:hover {
-    text-decoration: underline;
-}
-
-#connect_modal .message-form-section {
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px dashed #444;
-}
-
-#connect_modal .message-form-section h4 {
-    text-align: center;
-    margin-bottom: 15px;
-    color: #fff;
-    font-size: 1.2em;
-}
-
-#connect_modal .message-form-section label {
+#telegram_modal label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #d0d0d0;
-    font-size: 0.9em;
+    font-size: 0.95em;
 }
 
-#connect_modal .message-form-section input[type="text"],
-#connect_modal .message-form-section input[type="email"], /* Keeping email type for robustness if needed, but not used in form */
-#connect_modal .message-form-section textarea {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 15px;
+#telegram_modal input[type="text"],
+#telegram_modal textarea {
+    width: calc(100% - 22px); /* Adjust for padding and border */
+    padding: 12px;
+    margin-bottom: 18px;
     border: 1px solid #555;
-    border-radius: 5px;
+    border-radius: 6px;
     background-color: #3A3A3A;
     color: white;
     font-size: 1em;
+    box-sizing: border-box;
 }
 
-#connect_modal .message-form-section textarea {
+#telegram_modal textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 100px;
 }
 
-#connect_modal .message-form-section button {
-    background-color: #4a90e2;
-    color: white;
+#telegram_modal .button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#telegram_modal button {
+    flex-grow: 1;
     border: none;
-    padding: 12px 25px;
+    padding: 12px 20px;
     border-radius: 25px;
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.2s ease;
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
 }
 
-#connect_modal .message-form-section button:hover {
-    background-color: #357ABD;
+#telegram_modal button#send_telegram {
+    background-color: #0088cc; /* Telegram blue */
+    color: white;
+}
+
+#telegram_modal button#send_telegram:hover {
+    background-color: #006bb0;
     transform: scale(1.02);
 }
 
-#connect_modal .status-message {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 0.9em;
-    color: #d0d0d0;
-}
-
-#connect_modal button#close_connect_modal {
-    margin-top: 25px;
+#telegram_modal button#close_telegram {
     background-color: #666;
     color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    display: block;
-    width: 100%;
 }
-#connect_modal button#close_connect_modal:hover {
+#telegram_modal button#close_telegram:hover {
     background-color: #555;
     transform: scale(1.02);
+}
+
+#telegram_modal .status-message {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+    min-height: 20px; /* Reserve space */
 }
 
 """
@@ -413,11 +388,10 @@ with gr.Blocks(css=custom_css) as demo:
         elem_id="pdf_file_component"
     )
 
-    # All single '{' and '}' within the JavaScript part of this f-string must be escaped to '{{' and '}}'
     gr.HTML(f"""
 <style>
     /* Ensure modals are hidden by default */
-    #info_modal, #connect_modal {{ display: none; }}
+    #info_modal, #telegram_modal {{ display: none; }}
 </style>
 
 <div class="top-icons">
@@ -427,9 +401,9 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
-    <button id="connect_icon" title="Connect with Akshay">
+    <button id="telegram_icon" title="Contact via Telegram">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M12 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-10c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.76 0-5 2.24-5 5h2c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.25 1.58-1.32 5.41-1.87 7.19-.14.45-.41.6-.68.61-.58.02-1.03-.38-1.6-.74-.88-.56-1.38-.91-2.23-1.46-.99-.63-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.04.01-.17-.06-.24s-.17-.04-.25-.02c-.11.03-1.79 1.14-5.06 3.34-.48.33-.92.49-1.32.48-.43-.01-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.78.03-.27.32-.55.89-.84 6.26-2.77 8.33-3.71 9.43-4.19.56-.24 1.06-.36 1.02-.76-.03-.36-.54-.5-1.18-.2z"/>
         </svg>
     </button>
 
@@ -445,7 +419,7 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
+        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers.**. 🔍✨
         <br><br>
         What can I help you discover? 💡
         <ul>
@@ -466,29 +440,21 @@ with gr.Blocks(css=custom_css) as demo:
     <button id="close_modal">Close</button>
 </div>
 
-<div id="connect_modal">
-    <h3>Connect with Akshay 🤝</h3>
-    <p>Feel free to reach out using the details below or send a message directly via Telegram.</p>
+<div id="telegram_modal" class="telegram-modal">
+    <h3>Contact Akshay via Telegram 💬</h3>
+    <p>Send your message directly to Akshay Abraham:</p>
 
-    <p>
-        <strong>Email:</strong> <a href="mailto:akshayabraham02@gmail.com" class="contact-link">akshayabraham02@gmail.com</a><br>
-        <strong>Phone:</strong> <a href="tel:+44781815774" class="contact-link">+44781815774</a><br>
-        <strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/akshay-abraham" target="_blank" rel="noopener noreferrer" class="contact-link">linkedin.com/in/akshay-abraham</a>
-    </p>
+    <label for="telegram_sender_name_input">Your Name:</label>
+    <input type="text" id="telegram_sender_name_input" placeholder="Your Name" />
 
-    <div class="message-form-section">
-        <h4>Send via Telegram:</h4>
-        <label for="telegram_sender_name_input">Your Name:</label>
-        <input type="text" id="telegram_sender_name_input" placeholder="Your Name" />
+    <label for="telegram_message_content_input">Message:</label>
+    <textarea id="telegram_message_content_input" placeholder="Type your message here..." rows="5"></textarea>
 
-        <label for="telegram_message_content_input">Message:</label>
-        <textarea id="telegram_message_content_input" placeholder="Type your message here..."></textarea>
-
-        <button id="send_telegram_button">Send Telegram Message</button>
-        <p id="telegram_status_message" class="status-message"></p>
+    <div class="button-group">
+        <button id="send_telegram">Send Message</button>
+        <button id="close_telegram">Close</button>
     </div>
-
-    <button id="close_connect_modal">Close</button>
+    <p id="telegram_status_message" class="status-message"></p>
 </div>
 
 
@@ -501,14 +467,14 @@ with gr.Blocks(css=custom_css) as demo:
         document.getElementById('info_modal').style.display = 'none';
     }}; /* Escaped */
 
-    // NEW: Show Connect modal on icon click
-    document.getElementById('connect_icon').onclick = () => {{ /* Escaped */
-        document.getElementById('connect_modal').style.display = 'block';
+    // NEW: Show Telegram modal on icon click
+    document.getElementById('telegram_icon').onclick = () => {{ /* Escaped */
+        document.getElementById('telegram_modal').style.display = 'block';
         // Clear status message on open
         document.getElementById('telegram_status_message').textContent = '';
     }}; /* Escaped */
-    document.getElementById('close_connect_modal').onclick = () => {{ /* Escaped */
-        document.getElementById('connect_modal').style.display = 'none';
+    document.getElementById('close_telegram').onclick = () => {{ /* Escaped */
+        document.getElementById('telegram_modal').style.display = 'none';
         document.getElementById('telegram_status_message').textContent = '';
     }}; /* Escaped */
 
@@ -528,37 +494,52 @@ with gr.Blocks(css=custom_css) as demo:
     }}); /* Escaped */
 
     // NEW: JavaScript for sending Telegram message via Gradio backend
-    document.getElementById('send_telegram_button').onclick = async () => {{ /* Escaped */
+    document.getElementById('send_telegram').onclick = async () => {{ /* Escaped */
         const senderName = document.getElementById('telegram_sender_name_input').value;
         const messageContent = document.getElementById('telegram_message_content_input').value;
         const statusMessage = document.getElementById('telegram_status_message');
 
-        if (!senderName || !messageContent) {{ /* Escaped */
+        if (!senderName.trim() || !messageContent.trim()) {{ /* Escaped */
             statusMessage.style.color = '#ff6b6b';
-            statusMessage.textContent = 'Please fill in all Telegram fields.';
+            statusMessage.textContent = 'Please enter your name and message.';
             return;
         }} /* Escaped */
 
         statusMessage.style.color = '#d0d0d0';
         statusMessage.textContent = 'Sending Telegram message...';
 
-        const response = await fetch('/run/send_message_telegram', {{ /* Escaped */
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/json' }}, /* Escaped */
-            body: JSON.stringify({{ data: [senderName, messageContent] }}) /* Escaped */
-        }}); /* Escaped */
+        try {{ /* Escaped */
+            // This fetch call directly targets the API endpoint exposed by api_name in Python
+            const response = await fetch('/run/send_telegram_message', {{ /* Escaped */
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }}, /* Escaped */
+                body: JSON.stringify({{ data: [senderName, messageContent] }}) /* Escaped */
+            }}); /* Escaped */
 
-        const result = await response.json();
-        if (result.data && result.data.length > 0) {{ /* Escaped */
-            statusMessage.textContent = result.data[0];
-            if (result.data[0].includes('successfully')) {{ /* Escaped */
-                statusMessage.style.color = '#6bff6b';
-                document.getElementById('telegram_sender_name_input').value = '';
-                document.getElementById('telegram_message_content_input').value = '';
-            }} else {{ statusMessage.style.color = '#ff6b6b'; }} /* Escaped */
-        }} else {{ /* Escaped */
+            const result = await response.json();
+            if (response.ok && result.data && result.data.length > 0) {{ /* Escaped */
+                const statusText = result.data[0];
+                statusMessage.textContent = statusText;
+                if (statusText.includes('successfully')) {{ /* Escaped */
+                    statusMessage.style.color = '#6bff6b';
+                    document.getElementById('telegram_sender_name_input').value = ''; // Clear on success
+                    document.getElementById('telegram_message_content_input').value = '';
+                    // Optionally close modal on success after a short delay
+                    setTimeout(() => {{ /* Escaped */
+                        document.getElementById('telegram_modal').style.display = 'none';
+                        statusMessage.textContent = ''; // Clear status for next open
+                    }}, 1500);
+                }} else {{ /* Escaped */
+                    statusMessage.style.color = '#ff6b6b';
+                }} /* Escaped */
+            }} else {{ /* Escaped */
+                statusMessage.style.color = '#ff6b6b';
+                statusMessage.textContent = 'Failed to send message: ' + (result.error || 'Unknown server error');
+            }} /* Escaped */
+        }} catch (e) {{ /* Escaped */
             statusMessage.style.color = '#ff6b6b';
-            statusMessage.textContent = 'Unknown error sending Telegram message.';
+            statusMessage.textContent = 'Network error or server unreachable.';
+            console.error('Fetch error:', e);
         }} /* Escaped */
     }}; /* Escaped */
 
@@ -676,23 +657,22 @@ with gr.Blocks(css=custom_css) as demo:
         bot_reply, chatbot, chatbot
     )
 
-    # WORKAROUND for older Gradio versions: Expose send_message_telegram via a hidden component
-    # This creates the /run/send_message_telegram endpoint
+    # WORKAROUND for older Gradio versions (no gr.API):
+    # Expose send_telegram_message function as a Gradio API endpoint
+    # The api_name parameter is crucial here to ensure the endpoint matches the frontend fetch call.
     hidden_telegram_inputs_name = gr.Textbox(visible=False)
     hidden_telegram_inputs_message = gr.Textbox(visible=False)
-    hidden_telegram_outputs_status = gr.Textbox(visible=False)
+    hidden_telegram_outputs_status = gr.Textbox(visible=False) # To capture the output internally
 
-    # This hidden button's click event registers the function as a Gradio API endpoint.
-    # The `api_name` parameter ensures it's exposed under the name expected by your JavaScript.
     hidden_telegram_trigger_button = gr.Button(
-        value="Hidden Telegram Trigger", # This value doesn't matter as the button is hidden
+        value="Hidden Telegram Trigger", # Value doesn't matter as it's hidden
         visible=False
     )
     hidden_telegram_trigger_button.click(
-        fn=send_message_telegram,
+        fn=send_telegram_message,
         inputs=[hidden_telegram_inputs_name, hidden_telegram_inputs_message],
         outputs=[hidden_telegram_outputs_status],
-        api_name="send_message_telegram" # This is CRITICAL for your JavaScript fetch call
+        api_name="send_telegram_message" # This ensures the endpoint is /run/send_telegram_message
     )
 
 
@@ -733,3 +713,4 @@ with gr.Blocks(css=custom_css) as demo:
 # 🚀 Launch
 if __name__ == "__main__":
     demo.launch()
+    
