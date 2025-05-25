@@ -5,14 +5,11 @@ from utils import (
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
-    get_publications
+    get_publications  # Add this import
 )
 import os
 from groq import Groq
 from dotenv import load_dotenv
-
-# For Telegram Sending
-import requests # Make sure requests is installed (pip install requests)
 
 # Create cache directory
 os.makedirs('.gradio/cached_examples', exist_ok=True)
@@ -25,46 +22,8 @@ db = Chroma.from_texts(chunks, embedding_model)
 retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
 # --- Setup LLM (Groq) ---
-load_dotenv() # Load environment variables from .env file
+load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-# --- Telegram Configuration ---
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
-if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-    print("WARNING: TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID environment variables are not set. Telegram sending functionality will not work.")
-    print("Please set them in your .env file locally, or as Secret Variables in Hugging Face Spaces.")
-else:
-    print("Telegram bot configuration loaded successfully.")
-
-# --- Telegram Sending Function ---
-# This function will be called by Gradio's backend via the API endpoint
-def send_telegram_message(sender_name, message_content):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "Telegram integration not configured on the server."
-
-    telegram_message = (
-        f"New Message from Ressy AI Chatbot:\n\n"
-        f"Sender Name: {sender_name}\n"
-        f"Message:\n{message_content}"
-    )
-
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": telegram_message,
-            "parse_mode": "HTML"
-        }
-
-        response = requests.post(url, json=payload)
-        if response.status_code == 200:
-            return "Message sent successfully via Telegram!"
-        else:
-            return f"Failed to send message: {response.text}"
-    except Exception as e:
-        return f"Error sending message: {str(e)}"
 
 # --- Custom CSS ---
 custom_css = """
@@ -91,6 +50,7 @@ body, .gradio-container {
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE/Edge */
 }
+
 
 /* Lottie container styling */
 #lottie_container {
@@ -191,11 +151,13 @@ dotlottie-player {
     background-color: #007BFF !important;
     color: white !important;
     align-self: flex-end;
+    animation-delay: 0.1s;
 }
 
 .gr-message-bot {
     background-color: #2C2C2C !important;
     color: white !important;
+    animation-delay: 0.2s;
 }
 
 /* Input container */
@@ -226,8 +188,11 @@ dotlottie-player {
 
 #input_textbox textarea {
     background: transparent !important;
-    resize: vertical;
-    min-height: 80px;
+    resize: none !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Send button */
@@ -269,173 +234,135 @@ button[aria-label="Scroll to bottom"] {
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE/Edge */
 }
-
-/* NEW: Telegram Modal Styles */
-#telegram_modal {
-    display: none; /* Initially hidden */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Centering */
-    background: #2C2C2C;
-    color: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
-    z-index: 9999;
-    max-width: 450px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-sizing: border-box;
-    border: 1px solid #4a4a4a;
-}
-
-#telegram_modal h3 {
-    color: #0088cc; /* Telegram blue */
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 1.6em;
-    text-align: center;
-}
-
-#telegram_modal p {
-    font-size: 1em;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    color: #d0d0d0;
-    text-align: center;
-}
-
-#telegram_modal label {
-    display: block;
-    margin-bottom: 8px;
-    color: #d0d0d0;
-    font-size: 0.95em;
-}
-
-#telegram_modal input[type="text"],
-#telegram_modal textarea {
-    width: calc(100% - 22px); /* Adjust for padding and border */
-    padding: 12px;
-    margin-bottom: 18px;
-    border: 1px solid #555;
-    border-radius: 6px;
-    background-color: #3A3A3A;
-    color: white;
-    font-size: 1em;
-    box-sizing: border-box;
-}
-
-#telegram_modal textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-#telegram_modal .button-group {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-#telegram_modal button {
-    flex-grow: 1;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-#telegram_modal button#send_telegram {
-    background-color: #0088cc; /* Telegram blue */
-    color: white;
-}
-
-#telegram_modal button#send_telegram:hover {
-    background-color: #006bb0;
-    transform: scale(1.02);
-}
-
-#telegram_modal button#close_telegram {
-    background-color: #666;
-    color: white;
-}
-#telegram_modal button#close_telegram:hover {
-    background-color: #555;
-    transform: scale(1.02);
-}
-
-#telegram_modal .status-message {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 0.9em;
-    min-height: 20px; /* Reserve space */
-}
-
-/* TOP ICON STYLES (Crucial for sizing and color) */
-.top-icons {
-    display: flex;
-    justify-content: flex-end; /* Align to the right */
-    gap: 15px; /* Space between icons */
-    padding: 10px 20px; /* Padding for the container */
-    background-color: #1A1A1A; /* Ensure consistent background */
-    position: relative;
-    z-index: 10;
-}
-
-.top-icons button,
-.top-icons a {
-    background: none;
-    border: none;
-    padding: 0; /* Remove default padding from buttons */
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    display: flex; /* To center SVG if button has padding */
-    align-items: center;
-    justify-content: center;
-}
-
-.top-icons button:hover,
-.top-icons a:hover {
-    transform: scale(1.1);
-}
-
-.top-icons svg {
-    width: 28px; /* Adjust size as needed */
-    height: 28px; /* Adjust size as needed */
-    fill: #e0e0e0; /* Light gray for visibility on dark background */
-    transition: fill 0.2s ease;
-}
-
-.top-icons button:hover svg,
-.top-icons a:hover svg {
-    fill: #ffffff; /* White on hover */
-}
 """
 
 # --- Gradio UI ---
 with gr.Blocks(css=custom_css) as demo:
+    # MODIFIED: Define a gr.File component to serve the PDF for download
+    # It's hidden, but Gradio will generate a downloadable URL for it.
+    # The 'file_count="single"' and 'elem_id' are important.
     pdf_file_comp = gr.File(
         value="data/resume.pdf",
-        visible=False,
+        visible=False, # Keep hidden
         file_count="single",
-        elem_id="pdf_file_component"
+        elem_id="pdf_file_component" # This ID helps us target it with JS
     )
 
-    gr.HTML(f"""
+    gr.HTML("""
+<style>
+    /* This style block within gr.HTML is not best practice for external CSS.
+       It's redundant if the rules are already in custom_css.
+       Keeping it for now as it was in your provided code,
+       but ideally, these rules would be consolidated into `custom_css`. */
+    .top-icons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 30px;
+        padding: 10px 20px;
+    }
+    .top-icons button,
+    .top-icons a {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .top-icons button:hover svg,
+    .top-icons a:hover svg {
+        transform: scale(1.3) rotate(5deg);
+    }
+    .top-icons svg {
+        fill: #ffffff;
+        width: 28px;
+        height: 28px;
+        transition: transform 0.3s ease;
+    }
+#info_modal h3 {
+    color: #61dafb;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+#info_modal p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #d0d0d0;
+}
+    #info_modal {
+        display: none;
+        position: fixed;
+        top: 10%; /* Adjusted to be higher on screen */
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2C2C2C;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        z-index: 9999;
+        max-width: 650px; /* Increased max-width further for more space */
+        width: 90%; /* Maintain percentage width for responsiveness */
+        max-height: 80vh; /* Set a max height relative to viewport height */
+        overflow-y: auto; /* Enable internal scrolling if content overflows */
+        box-sizing: border-box; /* Include padding in height calculation */
+    }
+
+    #info_modal .disclaimer {
+        font-size: 0.9em;
+        color: #aaaaaa;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px dashed #444;
+        text-align: center;
+    }
+
+    #info_modal .disclaimer a {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    #info_modal .disclaimer a:hover {
+        text-decoration: underline;
+    }
+
+    #info_modal button#close_modal {
+        margin-top: 12px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    #info_modal button#close_modal:hover {
+        background-color: #357ABD;
+        transform: scale(1.05);
+    }
+    .prompt-btn {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .prompt-btn:hover {
+        background-color: #357ABD;
+        transform: scale(1.05);
+    }
+</style>
+
 <div class="top-icons">
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-        </svg>
-    </button>
-
-    <button id="telegram_icon" title="Contact via Telegram">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.25 1.58-1.32 5.41-1.87 7.19-.14.45-.41.6-.68.61-.58.02-1.03-.38-1.6-.74-.88-.56-1.38-.91-2.23-1.46-.99-.63-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.04.01-.17-.06-.24s-.17-.04-.25-.02c-.11.03-1.79 1.14-5.06 3.34-.48.33-.92.49-1.32.48-.43-.01-1.25-.24-1.87-.44-.75-.24-1.35-.37-1.3-.78.03-.27.32-.55.89-.84 6.26-2.77 8.33-3.71 9.43-4.19.56-.24 1.06-.36 1.02-.76-.03-.36-.54-.5-1.18-.2z"/>
         </svg>
     </button>
 
@@ -451,7 +378,7 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers.**. 🔍✨
+        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
         <br><br>
         What can I help you discover? 💡
         <ul>
@@ -472,120 +399,33 @@ with gr.Blocks(css=custom_css) as demo:
     <button id="close_modal">Close</button>
 </div>
 
-<div id="telegram_modal" class="telegram-modal">
-    <h3>Contact Akshay via Telegram 💬</h3>
-    <p>Send your message directly to Akshay Abraham:</p>
-
-    <label for="telegram_sender_name_input">Your Name:</label>
-    <input type="text" id="telegram_sender_name_input" placeholder="Your Name" />
-
-    <label for="telegram_message_content_input">Message:</label>
-    <textarea id="telegram_message_content_input" placeholder="Type your message here..." rows="5"></textarea>
-
-    <div class="button-group">
-        <button id="send_telegram">Send Message</button>
-        <button id="close_telegram">Close</button>
-    </div>
-    <p id="telegram_status_message" class="status-message"></p>
-</div>
-
-
 <script>
     // Show info modal on icon click
-    document.getElementById('info_icon').onclick = (event) => {{ /* Added event parameter */
-        event.preventDefault(); /* Prevent default button behavior (e.g., form submission) */
-        event.stopPropagation(); /* Stop event from bubbling up to parent elements */
+    document.getElementById('info_icon').onclick = () => {
         document.getElementById('info_modal').style.display = 'block';
-    }}; /* Escaped */
-    document.getElementById('close_modal').onclick = (event) => {{
-        event.preventDefault();
-        event.stopPropagation();
+    };
+    document.getElementById('close_modal').onclick = () => {
         document.getElementById('info_modal').style.display = 'none';
-    }}; /* Escaped */
-
-    // NEW: Show Telegram modal on icon click
-    document.getElementById('telegram_icon').onclick = (event) => {{ /* Added event parameter */
-        event.preventDefault(); /* Prevent default button behavior */
-        event.stopPropagation(); /* Stop event from bubbling up */
-        document.getElementById('telegram_modal').style.display = 'block';
-        // Clear status message on open
-        document.getElementById('telegram_status_message').textContent = '';
-        document.getElementById('telegram_sender_name_input').value = ''; // Clear inputs
-        document.getElementById('telegram_message_content_input').value = '';
-    }}; /* Escaped */
-    document.getElementById('close_telegram').onclick = (event) => {{
-        event.preventDefault();
-        event.stopPropagation();
-        document.getElementById('telegram_modal').style.display = 'none';
-        document.getElementById('telegram_status_message').textContent = '';
-    }}; /* Escaped */
+    };
 
     // MODIFIED: Script to get Gradio File URL for download and update the link
-    // The download icon itself is an <a> tag, so its default behavior is desired.
-    document.addEventListener('DOMContentLoaded', (event) => {{ /* Escaped */
-        setTimeout(() => {{ /* Escaped */
-            const fileContainer = document.getElementById('pdf_file_component');
-            if (fileContainer) {{ /* Escaped */
+    // Use a short delay to ensure Gradio has rendered the hidden file component
+    document.addEventListener('DOMContentLoaded', (event) => {
+        setTimeout(() => {
+            const fileContainer = document.getElementById('pdf_file_component'); // The hidden gr.File component's container
+            if (fileContainer) {
+                // Find the actual <a> tag that Gradio creates for download within the hidden component
                 const gradioDownloadLink = fileContainer.querySelector('.file-preview a');
                 const customDownloadIcon = document.getElementById('download_icon');
 
-                if (gradioDownloadLink && customDownloadIcon) {{ /* Escaped */
+                if (gradioDownloadLink && customDownloadIcon) {
                     customDownloadIcon.href = gradioDownloadLink.href;
-                }} /* Escaped */
-            }} /* Escaped */
-        }}, 500);
-    }}); /* Escaped */
-
-    // NEW: JavaScript for sending Telegram message via Gradio backend
-    document.getElementById('send_telegram').onclick = async () => {{ /* Escaped */
-        const senderName = document.getElementById('telegram_sender_name_input').value;
-        const messageContent = document.getElementById('telegram_message_content_input').value;
-        const statusMessage = document.getElementById('telegram_status_message');
-
-        if (!senderName.trim() || !messageContent.trim()) {{ /* Escaped */
-            statusMessage.style.color = '#ff6b6b';
-            statusMessage.textContent = 'Please enter your name and message.';
-            return;
-        }} /* Escaped */
-
-        statusMessage.style.color = '#d0d0d0';
-        statusMessage.textContent = 'Sending Telegram message...';
-
-        try {{ /* Escaped */
-            // This fetch call directly targets the API endpoint exposed by api_name in Python
-            const response = await fetch('/run/send_telegram_message', {{ /* Escaped */
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }}, /* Escaped */
-                body: JSON.stringify({{ data: [senderName, messageContent] }}) /* Escaped */
-            }}); /* Escaped */
-
-            const result = await response.json();
-            if (response.ok && result.data && result.data.length > 0) {{ /* Escaped */
-                const statusText = result.data[0];
-                statusMessage.textContent = statusText;
-                if (statusText.includes('successfully')) {{ /* Escaped */
-                    statusMessage.style.color = '#6bff6b';
-                    document.getElementById('telegram_sender_name_input').value = ''; // Clear on success
-                    document.getElementById('telegram_message_content_input').value = '';
-                    // Optionally close modal on success after a short delay
-                    setTimeout(() => {{ /* Escaped */
-                        document.getElementById('telegram_modal').style.display = 'none';
-                        statusMessage.textContent = ''; // Clear status for next open
-                    }}, 1500);
-                }} else {{ /* Escaped */
-                    statusMessage.style.color = '#ff6b6b';
-                }} /* Escaped */
-            }} else {{ /* Escaped */
-                statusMessage.style.color = '#ff6b6b';
-                statusMessage.textContent = 'Failed to send message: ' + (result.error || 'Unknown server error');
-            }} /* Escaped */
-        }} catch (e) {{ /* Escaped */
-            statusMessage.style.color = '#ff6b6b';
-            statusMessage.textContent = 'Network error or server unreachable.';
-            console.error('Fetch error:', e);
-        }} /* Escaped */
-    }}; /* Escaped */
-
+                    // The 'download' attribute is already set on the custom icon's HTML
+                    // customDownloadIcon.download = "Akshay_Abraham_Resume.pdf"; // This line is not strictly needed if already in HTML
+                }
+            }
+        }, 500); // 500ms delay: Give Gradio time to fully render its components.
+    });
 </script>
 """)
 
@@ -660,24 +500,24 @@ with gr.Blocks(css=custom_css) as demo:
     def bot_reply(chat_history):
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
-
+    
         # Check if the question is about publications/research
         if any(keyword in message.lower() for keyword in [
-                            "publication", "publications", "published",
-                            "research", "researches",
-                            "paper", "papers",
-                            "article", "articles",
-                            "journal", "journals",
-                            "author", "authored",
-                            "contribution", "contributions",
-                            "cite", "citations"
-                        ]):
+                    "publication", "publications", "published",
+                    "research", "researches", 
+                    "paper", "papers", 
+                    "article", "articles",
+                    "journal", "journals",
+                    "author", "authored",
+                    "contribution", "contributions",
+                    "cite", "citations"
+                ]):
             publications = get_publications()
             publications_text = "\n".join(
                 [f"- {pub['title']} ({pub['link']})" for pub in publications]
             )
             relevant_excerpts += f"\n\nAdditional Publications:\n{publications_text}"
-
+    
         bot_message = resume_chat_completion(
             client,
             "llama-3.3-70b-versatile",
@@ -699,25 +539,6 @@ with gr.Blocks(css=custom_css) as demo:
     ).then(
         bot_reply, chatbot, chatbot
     )
-
-    # WORKAROUND for older Gradio versions (no gr.API):
-    # Expose send_telegram_message function as a Gradio API endpoint
-    # The api_name parameter is crucial here to ensure the endpoint matches the frontend fetch call.
-    hidden_telegram_inputs_name = gr.Textbox(visible=False)
-    hidden_telegram_inputs_message = gr.Textbox(visible=False)
-    hidden_telegram_outputs_status = gr.Textbox(visible=False) # To capture the output internally
-
-    hidden_telegram_trigger_button = gr.Button(
-        value="Hidden Telegram Trigger", # Value doesn't matter as it's hidden
-        visible=False
-    )
-    hidden_telegram_trigger_button.click(
-        fn=send_telegram_message,
-        inputs=[hidden_telegram_inputs_name, hidden_telegram_inputs_message],
-        outputs=[hidden_telegram_outputs_status],
-        api_name="send_telegram_message" # This ensures the endpoint is /run/send_telegram_message
-    )
-
 
     # 🔄 Scroll + Hide Intro
     gr.HTML("""
