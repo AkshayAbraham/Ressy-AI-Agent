@@ -8,7 +8,6 @@ from utils import (
     get_publications  # Add this import
 )
 import os
-import requests
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -26,37 +25,19 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-# Function to send message to Telegram
-def send_telegram_suggestion_api(message: str) -> str:
-    """Sends a suggestion message to Telegram."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "❌ Telegram integration not configured on the server."
-
-    if not message.strip():
-        return "❌ Please enter a suggestion before submitting."
-
-    telegram_message_text = f"New Suggestion Received:\n\n{message}"
-
+def send_telegram_message(message):
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": f"📨 New Suggestion:\n\n{message}"}
     try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": telegram_message_text
-        }
-
-        response = requests.post(url, json=payload)
+        response = requests.post(url, data=payload)
         if response.status_code == 200:
             return "✅ Suggestion sent successfully!"
         else:
-            print(f"Telegram API Error: {response.status_code} - {response.text}")
-            return f"❌ Failed to send. Server response: {response.status_code} - {response.text}"
+            return "❌ Failed to send suggestion."
     except Exception as e:
-        print(f"Error sending Telegram message: {str(e)}")
         return f"❌ Error: {str(e)}"
-
 
 # --- Custom CSS ---
 custom_css = """
@@ -281,46 +262,6 @@ with gr.Blocks(css=custom_css) as demo:
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
 
-    telegram_message_input_bridge = gr.Textbox(visible=False, elem_id="telegram_message_input_bridge")
-    telegram_status_output_bridge = gr.Textbox(visible=False, elem_id="telegram_status_output_bridge")
-
-    telegram_message_input_bridge.change(
-        fn=send_telegram_suggestion_api, # Call the Python function
-        inputs=[telegram_message_input_bridge], # Input to the function comes from this textbox
-        outputs=[telegram_status_output_bridge] # Output of the function goes to this textbox
-    )
-
-    # Auto-scroll and intro hide script
-    gr.HTML("""
-    <script>
-    const observer = new MutationObserver(() => {
-        const bot = document.querySelector("#chatbot");
-        if (bot) {
-            bot.scrollTo({ top: bot.scrollHeight, behavior: "smooth" });
-        }
-    });
-    observer.observe(document.querySelector("#chatbot"), { childList: true, subtree: true });
-
-    const textbox = document.querySelector("#input_textbox textarea");
-    const button = document.querySelector("#send_button");
-
-    function clearAndHideIntro() {
-        textbox.value = "";
-        const intro = document.querySelector("#intro_container");
-        const chatbot = document.querySelector("#chatbot");
-        if (intro) intro.style.display = "none";
-        if (chatbot) chatbot.style.display = "block";
-    }
-
-    button.addEventListener("click", clearAndHideIntro);
-    textbox.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            setTimeout(clearAndHideIntro, 10);
-        }
-    });
-    </script>
-    """)
-
     gr.HTML("""
 <style>
     /* This style block within gr.HTML is not best practice for external CSS.
@@ -444,13 +385,6 @@ with gr.Blocks(css=custom_css) as demo:
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
         </svg>
     </a>
-
-    <button id="suggestion_icon" title="Send Suggestion">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M2 21l21-9L2 3v7l15 2-15 2z"/>
-        </svg>
-    </button>
-
 </div>
 
 <div id="info_modal">
@@ -477,19 +411,6 @@ with gr.Blocks(css=custom_css) as demo:
     </div>
 
     <button id="close_modal">Close</button>
-    
-<div id="suggestion_modal" class="modal-container">
-    <h3>Send a Suggestion 💬</h3>
-    <p>Help improve Ressy by sending your feedback or suggestions directly to Akshay Abraham.</p>
-
-    <label for="suggestion_message_input">Your Suggestion:</label>
-    <textarea id="suggestion_message_input" placeholder="Type your suggestion here..." rows="5"></textarea>
-
-    <div class="button-group">
-        <button id="send_suggestion_btn_html" class="primary-btn">Send Suggestion</button>
-        <button id="close_suggestion_modal_html" class="secondary-btn">Close</button>
-    </div>
-    <p id="suggestion_status_message" class="status-message"></p>
 </div>
 
 <script>
@@ -519,103 +440,6 @@ with gr.Blocks(css=custom_css) as demo:
             }
         }, 500); // 500ms delay: Give Gradio time to fully render its components.
     });
-    // Event listener for suggestion icon (opens modal)
-    document.getElementById('suggestion_icon').onclick = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        document.getElementById('suggestion_modal').style.display = 'block';
-        // Clear previous input and status when opening
-        document.getElementById('suggestion_message_input').value = '';
-        document.getElementById('suggestion_status_message').textContent = '';
-    };
-    // Close suggestion modal
-    document.getElementById('close_suggestion_modal_html').onclick = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        document.getElementById('suggestion_modal').style.display = 'none';
-        document.getElementById('suggestion_status_message').textContent = ''; // Clear status on close
-    };
-
-    // JavaScript for sending Suggestion message via the hidden Gradio component bridge
-    document.getElementById('send_suggestion_btn_html').onclick = async () => {
-        const suggestionMessage = document.getElementById('suggestion_message_input').value;
-        const statusMessageDiv = document.getElementById('suggestion_status_message');
-
-        if (!suggestionMessage.trim()) {
-            statusMessageDiv.style.color = '#ff6b6b';
-            statusMessageDiv.textContent = 'Please enter a suggestion.';
-            return;
-        }
-
-        statusMessageDiv.style.color = '#d0d0d0';
-        statusMessageDiv.textContent = 'Sending suggestion...';
-
-        try {
-            // Get the hidden Gradio Textbox components (bridge)
-            const gradioInputBridge = document.getElementById('telegram_message_input_bridge');
-            const gradioOutputBridge = document.getElementById('telegram_status_output_bridge');
-
-            if (gradioInputBridge && gradioOutputBridge) {
-                // Set the value of the hidden input bridge, which triggers its .change() event
-                gradioInputBridge.value = suggestionMessage;
-                // It's crucial to dispatch input and change events for Gradio to react
-                gradioInputBridge.dispatchEvent(new Event('input', { bubbles: true }));
-                gradioInputBridge.dispatchEvent(new Event('change', { bubbles: true }));
-
-                // Gradio updates its hidden output component after the Python function runs.
-                // We need to wait for this update to read the status.
-                // Using a MutationObserver is the most robust way to detect changes to a hidden Gradio output.
-                const observer = new MutationObserver((mutationsList, observer) => {
-                    for (const mutation of mutationsList) {
-                        if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                            const newStatus = gradioOutputBridge.value; // Get the updated status
-                            updateStatusDisplay(newStatus);
-                            observer.disconnect(); // Stop observing once status is received
-                        }
-                    }
-                });
-
-                // Start observing the hidden output bridge's value attribute
-                observer.observe(gradioOutputBridge.querySelector('input, textarea'), { attributes: true });
-
-                // If for some reason the observer doesn't fire (e.g., immediate execution),
-                // or if it takes too long, you might want a timeout.
-                setTimeout(() => {
-                    if (observer.takeRecords().length === 0) { // If no records were taken, observer didn't fire
-                        const currentStatus = gradioOutputBridge.value;
-                        if (!currentStatus || currentStatus === '') {
-                             statusMessageDiv.style.color = '#ffa500';
-                             statusMessageDiv.textContent = 'Submission initiated, awaiting confirmation...';
-                        }
-                    }
-                }, 3000); // Give it a few seconds before potential timeout message
-
-
-            } else {
-                statusMessageDiv.style.color = '#ff6b6b';
-                statusMessageDiv.textContent = 'Internal error: Gradio component bridge not found.';
-            }
-        } catch (e) {
-            statusMessageDiv.style.color = '#ff6b6b';
-            statusMessageDiv.textContent = `Network error or server unreachable: ${e.message}`;
-            console.error('Error sending suggestion:', e);
-        }
-
-        function updateStatusDisplay(statusText) {
-            if (statusText.includes('✅')) {
-                statusMessageDiv.style.color = '#6bff6b';
-                statusMessageDiv.textContent = statusText;
-                document.getElementById('suggestion_message_input').value = ''; // Clear input on success
-                setTimeout(() => {
-                    document.getElementById('suggestion_modal').style.display = 'none';
-                    statusMessageDiv.textContent = ''; // Clear status for next open
-                }, 1500);
-            } else if (statusText.includes('❌')) {
-                statusMessageDiv.style.color = '#ff6b6b';
-                statusMessageDiv.textContent = statusText;
-            }
-        }
-    };
 </script>
 """)
 
@@ -729,6 +553,21 @@ with gr.Blocks(css=custom_css) as demo:
     ).then(
         bot_reply, chatbot, chatbot
     )
+
+    # Suggestion Section
+    with gr.Row():
+        toggle_suggestion = gr.Button("💡 Suggest Something")
+
+    with gr.Column(visible=False) as suggestion_section:
+        suggestion_box = gr.Textbox(label="Send a Suggestion", lines=3, max_lines=5, placeholder="Type your feedback...")
+        suggestion_button = gr.Button("Submit Suggestion")
+        suggestion_status = gr.Textbox(label="Status", interactive=False)
+
+    def show_suggestion_box():
+        return gr.update(visible=True)
+
+    toggle_suggestion.click(fn=show_suggestion_box, outputs=suggestion_section)
+    suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
 
     # 🔄 Scroll + Hide Intro
     gr.HTML("""
