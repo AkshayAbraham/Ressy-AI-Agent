@@ -27,25 +27,61 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Function to send message to Telegram
-def send_telegram_message(message: str):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "Telegram configuration missing."
-
+def send_telegram_message(message):
+    if not message.strip():
+        return "Please enter a suggestion before submitting."
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
+    data = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": f"📬 New Suggestion:\n\n{message}",
-        "parse_mode": "HTML",
+        "text": f"New Suggestion Received:\n\n{message}"
     }
-
     try:
-        response = requests.post(url, data=payload)
+        response = requests.post(url, data=data)
         if response.status_code == 200:
             return "✅ Suggestion sent successfully!"
         else:
-            return f"❌ Failed to send: {response.text}"
+            return "❌ Failed to send. Try again later."
     except Exception as e:
-        return f"⚠️ Error: {e}"
+        return f"❌ Error: {str(e)}"
+
+def toggle_suggestion_box(show):
+    return gr.update(visible=not show), not show
+
+with gr.Blocks() as demo:
+    gr.Markdown("## 🤖 AI Chatbot with Suggestion Feature")
+
+    chatbot = gr.Chatbot()
+    user_input = gr.Textbox(label="Your Message")
+    send_button = gr.Button("Send")
+
+    history = gr.State([])
+
+    send_button.click(fn=chat, inputs=[user_input, history], outputs=[chatbot, history])
+
+    # Suggestion Button
+    with gr.Row():
+        toggle_button = gr.Button("💡 Send a Suggestion")
+    
+    suggestion_visible = gr.State(False)
+    
+    with gr.Column(visible=False) as suggestion_ui:
+        suggestion_box = gr.Textbox(label="Your Suggestion")
+        suggestion_submit = gr.Button("Submit Suggestion")
+        suggestion_status = gr.Textbox(label="Status", interactive=False)
+
+    # Toggle suggestion UI
+    toggle_button.click(
+        fn=toggle_suggestion_box,
+        inputs=[suggestion_visible],
+        outputs=[suggestion_ui, suggestion_visible]
+    )
+
+    # Handle submission
+    suggestion_submit.click(
+        fn=send_telegram_message,
+        inputs=suggestion_box,
+        outputs=suggestion_status
+    )
 
 # --- Custom CSS ---
 custom_css = """
