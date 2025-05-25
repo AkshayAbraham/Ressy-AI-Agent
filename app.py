@@ -44,44 +44,6 @@ def send_telegram_message(message):
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
-def toggle_suggestion_box(show):
-    return gr.update(visible=not show), not show
-
-with gr.Blocks() as demo:
-    gr.Markdown("## 🤖 AI Chatbot with Suggestion Feature")
-
-    chatbot = gr.Chatbot()
-    user_input = gr.Textbox(label="Your Message")
-    send_button = gr.Button("Send")
-
-    history = gr.State([])
-
-    send_button.click(fn=chat, inputs=[user_input, history], outputs=[chatbot, history])
-
-    # Suggestion Button
-    with gr.Row():
-        toggle_button = gr.Button("💡 Send a Suggestion")
-    
-    suggestion_visible = gr.State(False)
-    
-    with gr.Column(visible=False) as suggestion_ui:
-        suggestion_box = gr.Textbox(label="Your Suggestion")
-        suggestion_submit = gr.Button("Submit Suggestion")
-        suggestion_status = gr.Textbox(label="Status", interactive=False)
-
-    # Toggle suggestion UI
-    toggle_button.click(
-        fn=toggle_suggestion_box,
-        inputs=[suggestion_visible],
-        outputs=[suggestion_ui, suggestion_visible]
-    )
-
-    # Handle submission
-    suggestion_submit.click(
-        fn=send_telegram_message,
-        inputs=suggestion_box,
-        outputs=suggestion_status
-    )
 
 # --- Custom CSS ---
 custom_css = """
@@ -305,24 +267,51 @@ with gr.Blocks(css=custom_css) as demo:
         file_count="single",
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
-with gr.Blocks() as demo:
-    gr.Markdown("## 🤖 AI Chatbot with Suggestion Box")
+    # Suggestion Section
+    with gr.Row():
+        toggle_suggestion = gr.Button("💡 Suggest Something")
 
-    chatbot = gr.Chatbot()
-    user_input = gr.Textbox(label="Your Message")
-    send_button = gr.Button("Send")
+    with gr.Column(visible=False) as suggestion_section:
+        suggestion_box = gr.Textbox(label="Send a Suggestion", lines=3, max_lines=5, placeholder="Type your feedback...")
+        suggestion_button = gr.Button("Submit Suggestion")
+        suggestion_status = gr.Textbox(label="Status", interactive=False)
 
-    suggestion_box = gr.Textbox(label="Send a Suggestion to the Developer")
-    suggestion_button = gr.Button("Submit Suggestion")
-    suggestion_status = gr.Textbox(label="Status", interactive=False)
+    def show_suggestion_box():
+        return gr.update(visible=True)
 
-    history = gr.State([])
-
-    # Chatbot interaction
-    send_button.click(fn=chat, inputs=[user_input, history], outputs=[chatbot, history])
-
-    # Suggestion submission
+    toggle_suggestion.click(fn=show_suggestion_box, outputs=suggestion_section)
     suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
+
+    # Auto-scroll and intro hide script
+    gr.HTML("""
+    <script>
+    const observer = new MutationObserver(() => {
+        const bot = document.querySelector("#chatbot");
+        if (bot) {
+            bot.scrollTo({ top: bot.scrollHeight, behavior: "smooth" });
+        }
+    });
+    observer.observe(document.querySelector("#chatbot"), { childList: true, subtree: true });
+
+    const textbox = document.querySelector("#input_textbox textarea");
+    const button = document.querySelector("#send_button");
+
+    function clearAndHideIntro() {
+        textbox.value = "";
+        const intro = document.querySelector("#intro_container");
+        const chatbot = document.querySelector("#chatbot");
+        if (intro) intro.style.display = "none";
+        if (chatbot) chatbot.style.display = "block";
+    }
+
+    button.addEventListener("click", clearAndHideIntro);
+    textbox.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            setTimeout(clearAndHideIntro, 10);
+        }
+    });
+    </script>
+    """)
 
     gr.HTML("""
 <style>
