@@ -501,6 +501,7 @@ with gr.Blocks(css=custom_css) as demo:
             container=False,
             elem_id="input_textbox",
             lines=1,
+            fn=answer_question,
             max_lines=5
         )
         submit = gr.Button("➤", elem_id="send_button")
