@@ -276,15 +276,12 @@ with gr.Blocks(css=custom_css) as demo:
         suggestion_button = gr.Button("Submit Suggestion")
         suggestion_status = gr.Textbox(label="Status", interactive=False)
 
-    def show_suggestion_box():
-        return gr.update(visible=True)
-        
-    # Suggestion Section
-    with gr.Row(visible=False):  # Hide this section
-        submit_btn = gr.Button("Submit Suggestion", elem_id="submit_suggestion_btn")
-        submit_btn.click(fn=send_telegram_message, inputs=[suggestion_box], outputs=[suggestion_status])
+# Bind the click AFTER defining suggestion_box
+    suggestion_button.click(fn=send_telegram_message, inputs=[suggestion_box], outputs=[suggestion_status])
 
-    suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
+# Define this hidden button to be clicked via JS
+    submit_btn = gr.Button("Submit Suggestion", elem_id="submit_suggestion_btn", visible=False)
+    submit_btn.click(fn=send_telegram_message, inputs=[suggestion_box], outputs=[suggestion_status])
 
     # Auto-scroll and intro hide script
     gr.HTML("""
