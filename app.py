@@ -266,18 +266,18 @@ with gr.Blocks(css=custom_css) as demo:
     )
 
     with gr.Column(visible=False) as suggestion_section:
-    with gr.Column():  # Replaced Box with Column
-        gr.Markdown("### Send Your Feedback")
-        suggestion_box = gr.Textbox(
-            label="Your suggestion", 
-            lines=3, 
-            max_lines=5, 
-            placeholder="Type your feedback here..."
-        )
-        with gr.Row():
-            suggestion_button = gr.Button("Submit", variant="primary")
-            close_button = gr.Button("Close")
-        suggestion_status = gr.Textbox(label="Status", interactive=False)
+        with gr.Column():  # Replaced Box with Column
+            gr.Markdown("### Send Your Feedback")
+            suggestion_box = gr.Textbox(
+                label="Your suggestion", 
+                lines=3, 
+                max_lines=5, 
+                placeholder="Type your feedback here..."
+            )
+            with gr.Row():
+                suggestion_button = gr.Button("Submit", variant="primary")
+                close_button = gr.Button("Close")
+            suggestion_status = gr.Textbox(label="Status", interactive=False)
 
     # MODIFIED: Event handling
     def toggle_suggestion_section():
