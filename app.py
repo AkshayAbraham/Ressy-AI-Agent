@@ -230,11 +230,8 @@ dotlottie-player {
 
 #input_textbox textarea {
     background: transparent !important;
-    resize: none !important;
-    border: none !important;
-    outline: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    resize: vertical;
+    min-height: 80px;
 }
 
 /* Send button */
@@ -679,16 +676,16 @@ with gr.Blocks(css=custom_css) as demo:
         bot_reply, chatbot, chatbot
     )
 
-    # Gradio API endpoint binding for Telegram (Only this one remains)
-    demo.api_endpoints.append(
-        gr.APIRoute(
-            path="/run/send_message_telegram",
-            methods=["POST"],
-            endpoint=send_message_telegram,
-            inputs=[gr.Textbox(), gr.Textbox()], # sender_name, message_content
-            outputs=[gr.Textbox()] # status message
-        )
+    # Custom API endpoint for Telegram message sending
+    gr.API(
+        name="send_message_telegram_api", # Optional: A name for internal reference
+        path="/send_message_telegram", # This path will be accessible as /run/send_message_telegram
+        methods=["POST"],
+        endpoint=send_message_telegram,
+        inputs=[gr.Textbox(label="Sender Name"), gr.Textbox(label="Message Content")],
+        outputs=[gr.Textbox(label="Status")]
     )
+
 
     # 🔄 Scroll + Hide Intro
     gr.HTML("""
