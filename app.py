@@ -24,6 +24,18 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+def answer_question(user_input):
+    # ✅ Rule-based fallback for publications
+    if "publication" in user_input.lower() or "research paper" in user_input.lower():
+        publications = get_publications()
+        formatted = "\n\n".join([f"• **{p['title']}**\n🔗 {p['link']}" for p in publications])
+        return f"Here are Akshay Abraham's publications:\n\n{formatted}"
+
+    # Proceed with normal RAG pipeline
+    relevant = semantic_search(user_input, retriever)
+    response = resume_chat_completion(client, "mixtral-8x7b-32768", user_input, relevant)
+    return response
+    
 # --- Custom CSS ---
 custom_css = """
 body, .gradio-container {
