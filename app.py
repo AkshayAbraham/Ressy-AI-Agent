@@ -416,6 +416,7 @@ with gr.Blocks(css=custom_css) as demo:
         elem_id="pdf_file_component"
     )
 
+    # All single '{' and '}' within the JavaScript part of this f-string must be escaped to '{{' and '}}'
     gr.HTML(f"""
 <style>
     /* Ensure modals are hidden by default */
@@ -496,73 +497,73 @@ with gr.Blocks(css=custom_css) as demo:
 
 <script>
     // Show info modal on icon click
-    document.getElementById('info_icon').onclick = () => {
+    document.getElementById('info_icon').onclick = () => {{ /* Escaped */
         document.getElementById('info_modal').style.display = 'block';
-    };
-    document.getElementById('close_modal').onclick = () => {
+    }}; /* Escaped */
+    document.getElementById('close_modal').onclick = () => {{ /* Escaped */
         document.getElementById('info_modal').style.display = 'none';
-    };
+    }}; /* Escaped */
 
     // NEW: Show Connect modal on icon click
-    document.getElementById('connect_icon').onclick = () => {
+    document.getElementById('connect_icon').onclick = () => {{ /* Escaped */
         document.getElementById('connect_modal').style.display = 'block';
         // Clear status message on open
         document.getElementById('telegram_status_message').textContent = '';
-    };
-    document.getElementById('close_connect_modal').onclick = () => {
+    }}; /* Escaped */
+    document.getElementById('close_connect_modal').onclick = () => {{ /* Escaped */
         document.getElementById('connect_modal').style.display = 'none';
         document.getElementById('telegram_status_message').textContent = '';
-    };
+    }}; /* Escaped */
 
     // MODIFIED: Script to get Gradio File URL for download and update the link
-    document.addEventListener('DOMContentLoaded', (event) => {
-        setTimeout(() => {
+    document.addEventListener('DOMContentLoaded', (event) => {{ /* Escaped */
+        setTimeout(() => {{ /* Escaped */
             const fileContainer = document.getElementById('pdf_file_component');
-            if (fileContainer) {
+            if (fileContainer) {{ /* Escaped */
                 const gradioDownloadLink = fileContainer.querySelector('.file-preview a');
                 const customDownloadIcon = document.getElementById('download_icon');
 
-                if (gradioDownloadLink && customDownloadIcon) {
+                if (gradioDownloadLink && customDownloadIcon) {{ /* Escaped */
                     customDownloadIcon.href = gradioDownloadLink.href;
-                }
-            }
-        }, 500);
-    });
+                }} /* Escaped */
+            }} /* Escaped */
+        }}, 500);
+    }}); /* Escaped */
 
     // NEW: JavaScript for sending Telegram message via Gradio backend
-    document.getElementById('send_telegram_button').onclick = async () => {
+    document.getElementById('send_telegram_button').onclick = async () => {{ /* Escaped */
         const senderName = document.getElementById('telegram_sender_name_input').value;
         const messageContent = document.getElementById('telegram_message_content_input').value;
         const statusMessage = document.getElementById('telegram_status_message');
 
-        if (!senderName || !messageContent) {
+        if (!senderName || !messageContent) {{ /* Escaped */
             statusMessage.style.color = '#ff6b6b';
             statusMessage.textContent = 'Please fill in all Telegram fields.';
             return;
-        }
+        }} /* Escaped */
 
         statusMessage.style.color = '#d0d0d0';
         statusMessage.textContent = 'Sending Telegram message...';
 
-        const response = await fetch('/run/send_message_telegram', {
+        const response = await fetch('/run/send_message_telegram', {{ /* Escaped */
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: [senderName, messageContent] })
-        });
+            headers: {{ 'Content-Type': 'application/json' }}, /* Escaped */
+            body: JSON.stringify({{ data: [senderName, messageContent] }}) /* Escaped */
+        }}); /* Escaped */
 
         const result = await response.json();
-        if (result.data && result.data.length > 0) {
+        if (result.data && result.data.length > 0) {{ /* Escaped */
             statusMessage.textContent = result.data[0];
-            if (result.data[0].includes('successfully')) {
+            if (result.data[0].includes('successfully')) {{ /* Escaped */
                 statusMessage.style.color = '#6bff6b';
                 document.getElementById('telegram_sender_name_input').value = '';
                 document.getElementById('telegram_message_content_input').value = '';
-            } else { statusMessage.style.color = '#ff6b6b'; }
-        } else {
+            }} else {{ statusMessage.style.color = '#ff6b6b'; }} /* Escaped */
+        }} else {{ /* Escaped */
             statusMessage.style.color = '#ff6b6b';
             statusMessage.textContent = 'Unknown error sending Telegram message.';
-        }
-    };
+        }} /* Escaped */
+    }}; /* Escaped */
 
 </script>
 """)
@@ -638,12 +639,12 @@ with gr.Blocks(css=custom_css) as demo:
     def bot_reply(chat_history):
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
-        
+
         # Check if the question is about publications/research
         if any(keyword in message.lower() for keyword in [
                             "publication", "publications", "published",
-                            "research", "researches", 
-                            "paper", "papers", 
+                            "research", "researches",
+                            "paper", "papers",
                             "article", "articles",
                             "journal", "journals",
                             "author", "authored",
@@ -655,7 +656,7 @@ with gr.Blocks(css=custom_css) as demo:
                 [f"- {pub['title']} ({pub['link']})" for pub in publications]
             )
             relevant_excerpts += f"\n\nAdditional Publications:\n{publications_text}"
-        
+
         bot_message = resume_chat_completion(
             client,
             "llama-3.3-70b-versatile",
