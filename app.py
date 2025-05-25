@@ -265,6 +265,39 @@ with gr.Blocks(css=custom_css) as demo:
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
 
+    with gr.Column(visible=False) as suggestion_section:
+        with gr.Box():  # Added Box for better visual grouping
+            gr.Markdown("### Send Your Feedback")
+            suggestion_box = gr.Textbox(
+                label="Your suggestion", 
+                lines=3, 
+                max_lines=5, 
+                placeholder="Type your feedback here..."
+            )
+            with gr.Row():
+                suggestion_button = gr.Button("Submit", variant="primary")
+                close_button = gr.Button("Close")
+            suggestion_status = gr.Textbox(label="Status", interactive=False)
+
+    # MODIFIED: Event handling
+    def toggle_suggestion_section():
+        return gr.update(visible=True)
+    
+    def close_suggestion_section():
+        return gr.update(visible=False)
+
+    # Bind events
+    suggestion_button.click(
+        fn=send_telegram_message, 
+        inputs=suggestion_box, 
+        outputs=suggestion_status
+    )
+    close_button.click(
+        fn=close_suggestion_section,
+        outputs=suggestion_section
+    )
+
+
     gr.HTML("""
 <style>
     /* This style block within gr.HTML is not best practice for external CSS.
@@ -289,6 +322,21 @@ with gr.Blocks(css=custom_css) as demo:
         transform: scale(1.3) rotate(5deg);
     }
     .top-icons svg {
+        fill: #ffffff;
+        width: 28px;
+        height: 28px;
+        transition: transform 0.3s ease;
+    }
+    .top-icons button#suggest_icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .top-icons button#suggest_icon:hover svg {
+        transform: scale(1.3) rotate(5deg);
+    }
+    .top-icons #suggest_icon svg {
         fill: #ffffff;
         width: 28px;
         height: 28px;
@@ -383,6 +431,12 @@ with gr.Blocks(css=custom_css) as demo:
         </svg>
     </button>
 
+    <button id="suggest_icon" title="Suggest Something">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17l-.59.59-.58.58V4h16v12zm-9-4h2v2h-2zm0-6h2v4h-2z"/>
+        </svg>
+    </button>
+
     <a id="download_icon" href="#" title="Download Resume" download="Akshay_Abraham_Resume.pdf">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M5 20h14v-2H5v2zm7-18v10l4-4h-3V2h-2v6H8l4 4z"/>
@@ -443,6 +497,12 @@ with gr.Blocks(css=custom_css) as demo:
             }
         }, 500); // 500ms delay: Give Gradio time to fully render its components.
     });
+
+    document.getElementById('suggest_icon').onclick = function() {
+        // This will trigger the Gradio component to show
+        const event = new Event('click', { bubbles: true });
+        document.querySelector('#suggest_icon').dispatchEvent(event);
+    };
 </script>
 """)
 
@@ -556,21 +616,6 @@ with gr.Blocks(css=custom_css) as demo:
     ).then(
         bot_reply, chatbot, chatbot
     )
-
-    # Suggestion Section
-    with gr.Row():
-        toggle_suggestion = gr.Button("💡 Suggest Something")
-
-    with gr.Column(visible=False) as suggestion_section:
-        suggestion_box = gr.Textbox(label="Send a Suggestion", lines=3, max_lines=5, placeholder="Type your feedback...")
-        suggestion_button = gr.Button("Submit Suggestion")
-        suggestion_status = gr.Textbox(label="Status", interactive=False)
-
-    def show_suggestion_box():
-        return gr.update(visible=True)
-
-    toggle_suggestion.click(fn=show_suggestion_box, outputs=suggestion_section)
-    suggestion_button.click(fn=send_telegram_message, inputs=suggestion_box, outputs=suggestion_status)
 
     # 🔄 Scroll + Hide Intro
     gr.HTML("""
