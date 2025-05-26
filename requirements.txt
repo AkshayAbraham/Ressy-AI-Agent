@@ -10,3 +10,6 @@ chromadb
 sentence-transformers
 python-dotenv
 numpy<2.0
+python-telegram-bot
+python-dotenv
+requests

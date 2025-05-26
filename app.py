@@ -1,13 +1,15 @@
 import gradio as gr
 from langchain.vectorstores import Chroma
+from gradio.components import Button
 from utils import (
     load_text_data,
     resume_chat_completion,
     semantic_search,
     setup_embedding_model,
-    get_publications  # Add this import
+    get_publications
 )
 import os
+import requests
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -24,6 +26,32 @@ retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 # --- Setup LLM (Groq) ---
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+def send_telegram_message(message):
+    """Sends a suggestion message to Telegram."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return "❌ Telegram integration not configured on the server."
+
+    if not message.strip():
+        return "❌ Please enter a suggestion before submitting."
+
+    telegram_message_text = f"📨 New Suggestion:\n\n{message}"
+
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": telegram_message_text}
+        response = requests.post(url, json=payload) # Use json=payload for consistency
+        if response.status_code == 200:
+            return "✅ Suggestion sent successfully!"
+        else:
+            print(f"Telegram API Error: {response.status_code} - {response.text}")
+            return f"❌ Failed to send suggestion. Server response: {response.status_code} - {response.text}"
+    except Exception as e:
+        print(f"Error sending Telegram message: {str(e)}")
+        return f"❌ Error: {str(e)}"
 
 # --- Custom CSS ---
 custom_css = """
@@ -234,9 +262,97 @@ button[aria-label="Scroll to bottom"] {
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE/Edge */
 }
+
+/* Styles for the suggestion modal (Gradio column) */
+.gradio-container .suggestion-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2C2C2C !important;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    z-index: 9999; /* Ensure it's on top */
+    max-width: 500px;
+    width: 90%;
+    box-sizing: border-box;
+    /* transition: opacity 0.3s ease; */ /* Removed for now, controlled by Gradio visible */
+}
+
+.gradio-container .suggestion-box h3 {
+    color: #61dafb; /* Or a color that fits your theme */
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.gradio-container .suggestion-box label {
+    display: block;
+    margin-bottom: 5px;
+    color: #d0d0d0;
+}
+
+.gradio-container .suggestion-box textarea {
+    width: 100%;
+    background-color: #1A1A1A;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    resize: vertical; /* Allow vertical resize */
+}
+
+.gradio-container .suggestion-box .button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.gradio-container .suggestion-box .primary-btn,
+.gradio-container .suggestion-box .secondary-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.gradio-container .suggestion-box .primary-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+}
+
+.gradio-container .suggestion-box .primary-btn:hover {
+    background-color: #357ABD;
+    transform: scale(1.05);
+}
+
+.gradio-container .suggestion-box .secondary-btn {
+    background-color: #555;
+    color: white;
+    border: none;
+}
+
+.gradio-container .suggestion-box .secondary-btn:hover {
+    background-color: #666;
+    transform: scale(1.05);
+}
+
+.gradio-container .suggestion-box .status-message {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
 """
 
-# --- Gradio UI ---
+# --- Gradio UI --
 with gr.Blocks(css=custom_css) as demo:
     # MODIFIED: Define a gr.File component to serve the PDF for download
     # It's hidden, but Gradio will generate a downloadable URL for it.
@@ -247,13 +363,51 @@ with gr.Blocks(css=custom_css) as demo:
         file_count="single",
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
+    
+    # Hidden Gradio Button to act as a bridge from HTML to Python for suggestion
+    suggest_trigger_btn = gr.Button(visible=False, elem_id="suggest_trigger_btn_id") # Renamed ID for clarity
+
+    # Suggestion Section (This is your Gradio-controlled "modal")
+    with gr.Column(visible=False, elem_id="suggestion_section_gradio") as suggestion_section:
+        with gr.Column(elem_classes="suggestion-box"):
+            gr.Markdown("### Send Your Feedback")
+            suggestion_box = gr.Textbox(
+                label="Your suggestion", 
+                lines=3, 
+                max_lines=5, 
+                placeholder="Type your feedback here..."
+            )
+            with gr.Row():
+                # Use a specific ID for the Gradio button, not one that clashes with HTML
+                suggestion_submit_btn_gradio = gr.Button("Submit", variant="primary", elem_id="suggestion_submit_btn_gradio")
+                close_suggestion_btn_gradio = gr.Button("Close", elem_id="close_suggestion_btn_gradio")
+            suggestion_status = gr.Textbox(label="Status", interactive=False, elem_id="suggestion_status_gradio")
+    
+    # Event handlers for the Gradio components
+    def toggle_suggestion_section():
+        return gr.update(visible=True)
+    
+    # Link the hidden Gradio button to the function that shows the suggestion section
+    suggest_trigger_btn.click(
+        fn=toggle_suggestion_section,
+        outputs=suggestion_section
+    )
+    
+    close_suggestion_btn_gradio.click(
+        fn=lambda: gr.update(visible=False),
+        outputs=suggestion_section
+    )
+    
+    suggestion_submit_btn_gradio.click(
+        fn=send_telegram_message,
+        inputs=suggestion_box,
+        outputs=suggestion_status
+    )
 
     gr.HTML("""
 <style>
-    /* This style block within gr.HTML is not best practice for external CSS.
-       It's redundant if the rules are already in custom_css.
-       Keeping it for now as it was in your provided code,
-       but ideally, these rules would be consolidated into `custom_css`. */
+    /* ... (your existing CSS for top-icons, info_modal etc.) ... */
+    /* Ensure the .top-icons button/a styles are correct for your SVG fills */
     .top-icons {
         display: flex;
         justify-content: flex-end;
@@ -277,23 +431,23 @@ with gr.Blocks(css=custom_css) as demo:
         height: 28px;
         transition: transform 0.3s ease;
     }
-#info_modal h3 {
-    color: #61dafb;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.5em;
-}
-
-#info_modal p {
-    font-size: 1em;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    color: #d0d0d0;
-}
+    /* Specific styles for the info modal */
+    #info_modal h3 {
+        color: #61dafb;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+    #info_modal p {
+        font-size: 1em;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        color: #d0d0d0;
+    }
     #info_modal {
         display: none;
         position: fixed;
-        top: 10%; /* Adjusted to be higher on screen */
+        top: 10%;
         left: 50%;
         transform: translateX(-50%);
         background: #2C2C2C;
@@ -302,13 +456,12 @@ with gr.Blocks(css=custom_css) as demo:
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0,0,0,0.4);
         z-index: 9999;
-        max-width: 650px; /* Increased max-width further for more space */
-        width: 90%; /* Maintain percentage width for responsiveness */
-        max-height: 80vh; /* Set a max height relative to viewport height */
-        overflow-y: auto; /* Enable internal scrolling if content overflows */
-        box-sizing: border-box; /* Include padding in height calculation */
+        max-width: 650px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-sizing: border-box;
     }
-
     #info_modal .disclaimer {
         font-size: 0.9em;
         color: #aaaaaa;
@@ -317,18 +470,15 @@ with gr.Blocks(css=custom_css) as demo:
         border-top: 1px dashed #444;
         text-align: center;
     }
-
     #info_modal .disclaimer a {
         color: #4a90e2;
         text-decoration: none;
         font-weight: bold;
     }
-
     #info_modal .disclaimer a:hover {
         text-decoration: underline;
     }
-
-    #info_modal button#close_modal {
+    #info_modal button#close_modal { /* Changed ID to close_info_modal if that's what's in JS */
         margin-top: 12px;
         background-color: #4a90e2;
         color: white;
@@ -343,26 +493,18 @@ with gr.Blocks(css=custom_css) as demo:
         background-color: #357ABD;
         transform: scale(1.05);
     }
-    .prompt-btn {
-        background-color: #4a90e2;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background-color 0.2s ease, transform 0.2s ease;
-    }
-    .prompt-btn:hover {
-        background-color: #357ABD;
-        transform: scale(1.05);
-    }
 </style>
 
 <div class="top-icons">
     <button id="info_icon" title="About Agent">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zm1-16C5.48 1 1 5.48 1 11s4.48 10 10 10 10-4.48 10-10S16.52 1 12 1zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+        </svg>
+    </button>
+
+    <button id="suggest_icon" title="Suggest Something">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17l-.59.59-.58.58V4h16v12zm-9-4h2v2h-2zm0-6h2v4h-2z"/>
         </svg>
     </button>
 
@@ -396,36 +538,47 @@ with gr.Blocks(css=custom_css) as demo:
         ⚠️ **Important Note:** As an AI, I may occasionally make mistakes or misinterpret context. For the most accurate and up-to-date information, or to connect directly, please refer to Akshay Abraham's official LinkedIn profile: <a href="https://www.linkedin.com/in/akshay-abraham/" target="_blank" rel="noopener noreferrer">Connect with Akshay on LinkedIn 🔗</a>
     </div>
 
-    <button id="close_modal">Close</button>
-</div>
+    <button id="close_info_modal">Close</button> </div>
 
 <script>
-    // Show info modal on icon click
-    document.getElementById('info_icon').onclick = () => {
-        document.getElementById('info_modal').style.display = 'block';
-    };
-    document.getElementById('close_modal').onclick = () => {
-        document.getElementById('info_modal').style.display = 'none';
-    };
-
-    // MODIFIED: Script to get Gradio File URL for download and update the link
-    // Use a short delay to ensure Gradio has rendered the hidden file component
     document.addEventListener('DOMContentLoaded', (event) => {
+        // Info Modal Logic
+        const infoIcon = document.getElementById('info_icon');
+        const infoModal = document.getElementById('info_modal');
+        const closeInfoModal = document.getElementById('close_info_modal'); // Ensure this ID matches
+
+        if (infoIcon && infoModal && closeInfoModal) {
+            infoIcon.onclick = () => {
+                infoModal.style.display = 'block';
+            };
+            closeInfoModal.onclick = () => {
+                infoModal.style.display = 'none';
+            };
+        }
+
+        // PDF Download Logic
         setTimeout(() => {
-            const fileContainer = document.getElementById('pdf_file_component'); // The hidden gr.File component's container
+            const fileContainer = document.getElementById('pdf_file_component');
             if (fileContainer) {
-                // Find the actual <a> tag that Gradio creates for download within the hidden component
                 const gradioDownloadLink = fileContainer.querySelector('.file-preview a');
                 const customDownloadIcon = document.getElementById('download_icon');
-
                 if (gradioDownloadLink && customDownloadIcon) {
-                    customDownloadIcon.href = gradioDownloadLink.href;
-                    // The 'download' attribute is already set on the custom icon's HTML
-                    // customDownloadIcon.download = "Akshay_Abraham_Resume.pdf"; // This line is not strictly needed if already in HTML
+                    customDownloadLink.href = gradioDownloadLink.href;
                 }
             }
-        }, 500); // 500ms delay: Give Gradio time to fully render its components.
-    });
+        }, 500);
+
+        // SUGGESTION BUTTON BRIDGE:
+        // This connects your visible HTML button to the hidden Gradio button
+        const htmlSuggestIcon = document.getElementById('suggest_icon'); // Your visible HTML button
+        const gradioSuggestTrigger = document.getElementById('suggest_trigger_btn_id'); // Your hidden Gradio button
+
+        if (htmlSuggestIcon && gradioSuggestTrigger) {
+            htmlSuggestIcon.onclick = () => {
+                gradioSuggestTrigger.click(); // Programmatically click the hidden Gradio button
+            };
+        }
+    }); // End DOMContentLoaded
 </script>
 """)
 
@@ -500,7 +653,7 @@ with gr.Blocks(css=custom_css) as demo:
     def bot_reply(chat_history):
         message = chat_history[-1]["content"]
         relevant_excerpts = semantic_search(message, retriever)
-    
+        
         # Check if the question is about publications/research
         if any(keyword in message.lower() for keyword in [
                     "publication", "publications", "published",
@@ -517,7 +670,7 @@ with gr.Blocks(css=custom_css) as demo:
                 [f"- {pub['title']} ({pub['link']})" for pub in publications]
             )
             relevant_excerpts += f"\n\nAdditional Publications:\n{publications_text}"
-    
+        
         bot_message = resume_chat_completion(
             client,
             "llama-3.3-70b-versatile",
