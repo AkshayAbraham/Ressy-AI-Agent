@@ -352,7 +352,7 @@ button[aria-label="Scroll to bottom"] {
 }
 """
 
-# --- Gradio UI ---
+# --- Gradio UI --
 with gr.Blocks(css=custom_css) as demo:
     # MODIFIED: Define a gr.File component to serve the PDF for download
     # It's hidden, but Gradio will generate a downloadable URL for it.
