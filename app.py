@@ -536,10 +536,6 @@ button[aria-label="Scroll to bottom"] {
     height: 150px;
     margin-bottom: 15px;
 }
-#suggestion_submit_btn_gradio {
-    background-color: #2ECC71 !important; /* New green color */
-    border-radius: 8px !important;
-}
 """
 
 # --- Gradio UI ---
