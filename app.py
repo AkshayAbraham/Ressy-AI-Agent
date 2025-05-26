@@ -269,6 +269,50 @@ button[aria-label="Scroll to bottom"] {
     -ms-overflow-style: none !important; /* IE/Edge */
 }
 
+/* --- TOP ICONS --- */
+/* Top Icons Container */
+.top-icons {
+    position: fixed !important; /* Ensure position */
+    top: 20px !important;
+    right: 20px !important;
+    display: flex !important;
+    gap: 15px !important;
+    z-index: 1000 !important; /* Ensure it's on top of other content */
+}
+
+.top-icons button,
+.top-icons a {
+    background-color: #333 !important; /* Dark background for icons */
+    border: none !important;
+    border-radius: 50% !important; /* Make them circular */
+    width: 40px !important; /* Fixed size for buttons */
+    height: 40px !important; /* Fixed size for buttons */
+    min-width: 40px !important; /* Ensure min-width */
+    min-height: 40px !important; /* Ensure min-height */
+    display: flex !important; /* Use flex to center SVG */
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, transform 0.2s ease !important;
+    padding: 0 !important; /* Remove default padding */
+    box-sizing: border-box !important; /* Important for consistent sizing */
+}
+
+.top-icons button:hover,
+.top-icons a:hover {
+    background-color: #4a90e2 !important; /* Highlight on hover */
+    transform: translateY(-2px) !important;
+}
+
+.top-icons svg {
+    fill: #f0f0f0 !important; /* Color of the SVG icons */
+    width: 24px !important; /* Force SVG width */
+    height: 24px !important; /* Force SVG height */
+    display: block !important;
+}
+/* --- END TOP ICONS --- */
+
+
 /* Styles for the Connect With Me modal (Gradio column) */
 .gradio-container .suggestion-box {
     position: fixed;
@@ -444,7 +488,7 @@ with gr.Blocks(css=custom_css) as demo:
             <div class="social-links">
                 <a href="https://www.linkedin.com/in/akshay-abraham/" target="_blank" title="LinkedIn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-.984-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
                     </svg>
                 </a>
                 <a href="https://github.com/akshay-abraham" target="_blank" title="GitHub">
@@ -489,7 +533,8 @@ with gr.Blocks(css=custom_css) as demo:
 
     gr.HTML("""
 <style>
-    /* ... (your existing CSS for top-icons, info_modal etc. - already included in the full CSS string above) ... */
+    /* Your CSS is defined in the custom_css python string above.
+       This empty style tag is kept for consistency but is not strictly necessary here. */
 </style>
 
 <div class="top-icons">
@@ -517,7 +562,7 @@ with gr.Blocks(css=custom_css) as demo:
     <p>
         Welcome to Ressy, your intelligent guide to Akshay Abraham's professional journey! 👋
         <br><br>
-        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers**. 🔍✨
+        Ressy is powered by **cutting-edge RAG (Retrieval-Augmented Generation) and LLM (Large Language Model) technology**. This means I don't just guess; I intelligently search through Akshay's comprehensive resume and use advanced AI to provide you with **accurate, relevant, and insightful answers. 🔍✨**
         <br><br>
         What can I help you discover? 💡
         <ul>
@@ -569,16 +614,35 @@ with gr.Blocks(css=custom_css) as demo:
         }
 
         // PDF Download Logic
-        setTimeout(() => {
-            const fileContainer = document.getElementById('pdf_file_component');
-            if (fileContainer) {
-                const gradioDownloadLink = fileContainer.querySelector('.file-preview a');
-                const customDownloadIcon = document.getElementById('download_icon');
-                if (gradioDownloadLink && customDownloadIcon) {
+        // Use a MutationObserver to wait for the Gradio file component's link to be available
+        const pdfFileComponent = document.getElementById('pdf_file_component');
+        const customDownloadIcon = document.getElementById('download_icon');
+
+        if (pdfFileComponent && customDownloadIcon) {
+            const observer = new MutationObserver((mutations) => {
+                for (let mutation of mutations) {
+                    if (mutation.type === 'childList' || mutation.type === 'subtree') {
+                        const gradioDownloadLink = pdfFileComponent.querySelector('.file-preview a');
+                        if (gradioDownloadLink && gradioDownloadLink.href && customDownloadIcon.href === '#') {
+                            customDownloadIcon.href = gradioDownloadLink.href;
+                            observer.disconnect(); // Stop observing once the link is found
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // Start observing the pdfFileComponent for changes to its children
+            observer.observe(pdfFileComponent, { childList: true, subtree: true });
+
+            // Fallback: If observer doesn't catch it immediately, try a timeout
+            setTimeout(() => {
+                const gradioDownloadLink = pdfFileComponent.querySelector('.file-preview a');
+                if (gradioDownloadLink && gradioDownloadLink.href && customDownloadIcon.href === '#') {
                     customDownloadIcon.href = gradioDownloadLink.href;
                 }
-            }
-        }, 500);
+            }, 1000); // Give it a bit more time
+        }
 
         // SUGGESTION (Connect with me) BUTTON BRIDGE:
         const htmlSuggestIcon = document.getElementById('suggest_icon');
@@ -590,6 +654,8 @@ with gr.Blocks(css=custom_css) as demo:
                 // Clear message display when opening
                 const modalMessageDisplay = document.getElementById('modal_message_display');
                 if(modalMessageDisplay) modalMessageDisplay.textContent = '';
+                const suggestionInput = document.querySelector('#suggestion_section_gradio textarea');
+                if(suggestionInput) suggestionInput.value = ''; // Clear input field
             };
         }
 
@@ -607,8 +673,6 @@ with gr.Blocks(css=custom_css) as demo:
                         if (status) {
                             if (status === "SUCCESS") {
                                 // Hide the Gradio modal
-                                // This requires getting the actual Gradio container for suggestion_section
-                                // Gradio wraps gr.Column in a div with the elem_id, then another div inside
                                 const gradioModalRoot = document.getElementById('suggestion_section_gradio');
                                 if (gradioModalRoot) {
                                     gradioModalRoot.style.display = 'none';
@@ -618,9 +682,7 @@ with gr.Blocks(css=custom_css) as demo:
                                 successAnimationModal.style.display = 'block';
                                 setTimeout(() => {
                                     successAnimationModal.style.display = 'none';
-                                    // Clear input after successful send
-                                    const suggestionInput = document.querySelector('#suggestion_section_gradio textarea');
-                                    if(suggestionInput) suggestionInput.value = '';
+                                    // Clear input after successful send (already done when opening modal)
                                 }, 2500); // Display animation for 2.5 seconds
 
                             } else if (status.startsWith("ERROR:")) {
@@ -628,15 +690,11 @@ with gr.Blocks(css=custom_css) as demo:
                                 modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
                             }
                             telegramStatusOutputBridge.value = ''; // Clear the bridge value
-                            // For Gradio 3.x, you might need to dispatch an event to truly clear the value:
-                            // telegramStatusOutputBridge.dispatchEvent(new Event('input', { bubbles: true }));
-                            // telegramStatusOutputBridge.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                     }
                 }
             });
 
-            // The target node for the observer should be the actual input/textarea inside the gr.Textbox
             const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
             if (targetNode) {
                 observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
