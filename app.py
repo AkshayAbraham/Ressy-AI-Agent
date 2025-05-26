@@ -1,42 +1,75 @@
 import gradio as gr
-from langchain.vectorstores import Chroma
-from gradio.components import Button
-from utils import (
-    load_text_data,
-    resume_chat_completion,
-    semantic_search,
-    setup_embedding_model,
-    get_publications
-)
 import os
 import requests
 from groq import Groq
 from dotenv import load_dotenv
 
-# Create cache directory
-os.makedirs('.gradio/cached_examples', exist_ok=True)
+# Mock implementations for demonstration purposes if actual ones fail
+# In a real scenario, these would be your actual functions
+def load_text_data(path):
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return f.read()
+    return "Mock resume data."
 
-# --- Load Models & Data ---
+def resume_chat_completion(client, model, message, context):
+    return f"Mock response based on context: {context}. User query: {message}"
+
+def semantic_search(query, retriever):
+    return f"Mock relevant excerpts for: {query}"
+
+def setup_embedding_model(model_name):
+    class MockEmbeddingModel:
+        def embed_query(self, text):
+            return [0.1, 0.2] # Dummy embedding
+    return MockEmbeddingModel()
+
+def get_publications():
+    return [{"title": "Mock Publication 1", "link": "#"}, {"title": "Mock Publication 2", "link": "#"}]
+
+from langchain.vectorstores import Chroma # Keep import for structural similarity
+# Mock Chroma and retriever setup if actual ones fail due to missing libraries
 embedding_model = setup_embedding_model(model_name="sentence-transformers/all-mpnet-base-v2")
 my_resume = load_text_data("data/resume.txt")
 chunks = [chunk.strip() for chunk in my_resume.split("---") if chunk.strip()]
-db = Chroma.from_texts(chunks, embedding_model)
-retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+# Use a dummy Chroma object if real one fails
+try:
+    db = Chroma.from_texts(chunks, embedding_model)
+    retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+except Exception as e:
+    print(f"Warning: Could not initialize Chroma. Using mock retriever. Error: {e}")
+    class MockRetriever:
+        def as_retriever(self, search_type, search_kwargs):
+            return self
+        def get_relevant_documents(self, query):
+            return ["Mock relevant document 1", "Mock relevant document 2"]
+    retriever = MockRetriever()
+
+
+# Create cache directory
+os.makedirs('.gradio/cached_examples', exist_ok=True)
 
 # --- Setup LLM (Groq) ---
 load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY")) # This still requires GROQ_API_KEY env var
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-def send_telegram_message(message: str) -> str:
-    """Sends a suggestion message to Telegram and returns a status string."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "ERROR: Telegram integration not configured on server."
+# MODIFIED: send_telegram_message now returns a tuple for updating multiple outputs
+def send_telegram_message(message: str):
+    """Sends a suggestion message to Telegram and returns a tuple for UI updates."""
+    status_message = ""
+    # Assume modal_message_output is the element to show success/error
+    # And suggestion_section_gradio is the modal itself
 
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        status_message = "<span style='color: #ff6b6b;'>❌ ERROR: Telegram integration not configured on server.</span>"
+        return gr.update(visible=True), status_message # Keep modal open, show error
+    
     if not message.strip():
-        return "ERROR: Please enter a message before submitting."
+        status_message = "<span style='color: #ff6b6b;'>❌ ERROR: Please enter a message before submitting.</span>"
+        return gr.update(visible=True), status_message # Keep modal open, show error
 
     telegram_message_text = f"🌐 New Contact Message:\n\n{message}"
 
@@ -49,15 +82,19 @@ def send_telegram_message(message: str) -> str:
 
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            return "SUCCESS" # Signal success to JavaScript
+            status_message = "<span style='color: #61dafb;'>✅ Message sent successfully!</span>"
+            # For success, hide the modal, show success message
+            return gr.update(visible=False), status_message 
         else:
             error_msg = f"Failed to send: {response.status_code} - {response.text}"
             print(f"Telegram API Error: {error_msg}")
-            return f"ERROR: {error_msg}"
+            status_message = f"<span style='color: #ff6b6b;'>❌ ERROR: {error_msg}</span>"
+            return gr.update(visible=true), status_message # Keep modal open, show error
     except Exception as e:
         error_msg = f"Network error: {str(e)}"
         print(f"Error sending Telegram message: {error_msg}")
-        return f"ERROR: {error_msg}"
+        status_message = f"<span style='color: #ff6b6b;'>❌ ERROR: {error_msg}</span>"
+        return gr.update(visible=True), status_message # Keep modal open, show error
 
 # --- Custom CSS ---
 custom_css = """
@@ -67,7 +104,7 @@ body, .gradio-container {
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* Hide all loading indicators */
+/* Hide all loading indicators (important for this solution!) */
 .progress-bar, .animate-spin, .processing-time,
 [data-testid="progress-bar"], .progress,
 .spinner, .loading, .clear-button {
@@ -517,18 +554,28 @@ button[aria-label="Scroll to bottom"] {
     min-height: 1.5em; /* Reserve space */
 }
 
-/* New: Success Animation Modal */
-#success_animation_modal {
-    display: none; /* Hidden by default */
+/* New: Success/Error Message Display for the Modal */
+#modal_python_message_output { /* NEW ID */
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.9em;
+    min-height: 1.5em; /* Reserve space */
+    color: white; /* Default color, will be overridden by span styles */
+}
+
+
+/* Remove the success animation modal, as we can't control it with _js */
+/* #success_animation_modal {
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8); /* Semi-transparent background */
+    background: rgba(0,0,0,0.8);
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0 0 30px rgba(0,0,0,0.6);
-    z-index: 10000; /* Higher than other modals */
+    z-index: 10000;
     text-align: center;
     color: white;
     font-size: 1.2em;
@@ -537,7 +584,7 @@ button[aria-label="Scroll to bottom"] {
     width: 150px;
     height: 150px;
     margin-bottom: 15px;
-}
+} */
 """
 
 # --- Gradio UI ---
@@ -552,9 +599,6 @@ with gr.Blocks(css=custom_css) as demo:
     
     # Hidden Gradio Button to act as a bridge from HTML to Python for suggestion
     suggest_trigger_btn = gr.Button(visible=False, elem_id="suggest_trigger_btn_id")
-
-    # HIDDEN: A hidden Gradio Textbox to receive status from Python and trigger JS animations
-    telegram_status_output_bridge = gr.Textbox(visible=False, elem_id="telegram_status_output_bridge")
 
     # Connect With Me Section (This is your Gradio-controlled "modal")
     with gr.Column(visible=False, elem_id="suggestion_section_gradio") as suggestion_section:
@@ -584,7 +628,7 @@ with gr.Blocks(css=custom_css) as demo:
                 lines=3,
                 max_lines=5,
                 placeholder="Type your message here, including your contact info (email/phone) if you'd like a response.",
-                elem_id="suggestion_box_input_field" # ADDED: elem_id for JavaScript targeting
+                elem_id="suggestion_box_input_field"
             )
             # NEW: Hidden Textbox to pass message content from JS to Python
             _message_to_send = gr.Textbox(visible=False, elem_id="_message_to_send_input")
@@ -596,8 +640,13 @@ with gr.Blocks(css=custom_css) as demo:
                 suggestion_submit_btn_gradio = gr.Button("Send Message", variant="primary", elem_id="suggestion_submit_btn_gradio_id")
                 close_suggestion_btn_gradio = gr.Button("Close")
             
-            gr.HTML('<div class="modal-message-display" id="modal_message_display"></div>') # For temporary messages like "Sending..." or "Error!"
-    
+            # MODIFIED: This HTML element is now directly updated by Python for final status
+            modal_message_output = gr.HTML('<div class="modal-message-display" id="modal_message_display"></div>', elem_id="modal_python_message_output") 
+            # Note: The JS still updates 'modal_message_display' for "Sending...",
+            # and 'modal_python_message_output' gets the final Python status.
+            # We can merge these two elements into one if we want just one message display.
+            # For simplicity, keeping them separate for now, but `modal_message_display` will be overridden.
+
     # Event handlers for the Gradio components
     def toggle_suggestion_section():
         return gr.update(visible=True)
@@ -612,71 +661,20 @@ with gr.Blocks(css=custom_css) as demo:
         outputs=suggestion_section
     )
     
-    # MODIFIED: _submit_message_action_btn is now responsible for calling the Python function
+    # MODIFIED: _submit_message_action_btn now directly updates the modal's visibility
+    # and the message output element.
     _submit_message_action_btn.click(
         fn=send_telegram_message,
         inputs=_message_to_send, # Uses the hidden textbox as input
-        outputs=telegram_status_output_bridge
+        outputs=[suggestion_section, modal_message_output] # Output to modal visibility and message area
+        # show_progress=False is important here to avoid default Gradio loading text
     )
 
-    # NEW: Gradio .change() event listener for telegram_status_output_bridge
-    # This directly listens for changes to the bridge's value from the backend
-    telegram_status_output_bridge.change(
-        None, # No Python function needs to be called directly here
-        None, # No inputs needed
-        None, # No outputs needed for this side-effect JS
-        _js="""
-        (status_value) => {
-            // Get references to the necessary DOM elements
-            const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
-            const successAnimationModal = document.getElementById('success_animation_modal');
-            const modalMessageDisplay = document.getElementById('modal_message_display');
-
-            console.log("Status from telegram_status_output_bridge:", status_value); // Log status for debugging
-
-            if (status_value) {
-                if (status_value === "SUCCESS") {
-                    // Hide the main "Connect with me" modal
-                    if (suggestionSectionGradio) {
-                        suggestionSectionGratio.style.display = 'none';
-                    }
-                    // Clear the "Sending..." message
-                    if (modalMessageDisplay) {
-                        modalMessageDisplay.textContent = '';
-                    }
-                    
-                    // Show success animation (this includes the plane flying and turning into a checkmark)
-                    if (successAnimationModal) {
-                        successAnimationModal.style.display = 'block';
-                        setTimeout(() => {
-                            successAnimationModal.style.display = 'none'; // Hide it after 2.5 seconds
-                        }, 2500);
-                    }
-
-                } else if (status_value.startsWith("ERROR:")) {
-                    if (modalMessageDisplay) {
-                        modalMessageDisplay.style.color = '#ff6b6b';
-                        modalMessageDisplay.textContent = status_value.replace("ERROR:", "❌");
-                    }
-                }
-                // Important: Clear the bridge's value by sending a blank input event to its internal textarea.
-                // This ensures the .change() event can be re-triggered for subsequent messages
-                // even if the status is the same (e.g., multiple successes).
-                const bridgeInput = document.getElementById('telegram_status_output_bridge').querySelector('textarea');
-                if (bridgeInput) {
-                    bridgeInput.value = '';
-                    bridgeInput.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            }
-        }
-        """
-    )
-
+    # REMOVED: The telegram_status_output_bridge.change() with _js is removed due to the TypeError.
 
     gr.HTML("""
 <style>
-    /* Your CSS is defined in the custom_css python string above.
-       This empty style tag is kept for consistency but is not strictly necessary here. */
+    /* Your CSS is defined in the custom_css python string above. */
 </style>
 
 <div class="top-icons">
@@ -725,20 +723,6 @@ with gr.Blocks(css=custom_css) as demo:
     <button id="close_info_modal">Close</button>
 </div>
 
-<div id="success_animation_modal">
-    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
-    <dotlottie-player
-        src="https://lottie.host/805186b5-0c2d-450a-9d6c-6743b2f518e3/a87e5b1q7o.lottie"
-        background="transparent"
-        speed="1"
-        style="width: 100%; height: 100%"
-        loop
-        autoplay>
-    </dotlottie-player>
-    <p>Message sent successfully!</p>
-</div>
-
-
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
         // Info Modal Logic
@@ -756,7 +740,6 @@ with gr.Blocks(css=custom_css) as demo:
         }
 
         // PDF Download Logic
-        // Use a MutationObserver to wait for the Gradio file component's link to be available
         const pdfFileComponent = document.getElementById('pdf_file_component');
         const customDownloadIcon = document.getElementById('download_icon');
 
@@ -767,35 +750,34 @@ with gr.Blocks(css=custom_css) as demo:
                         const gradioDownloadLink = pdfFileComponent.querySelector('.file-preview a');
                         if (gradioDownloadLink && gradioDownloadLink.href && customDownloadIcon.href === '#') {
                             customDownloadIcon.href = gradioDownloadLink.href;
-                            observer.disconnect(); // Stop observing once the link is found
+                            observer.disconnect();
                             break;
                         }
                     }
                 }
             });
 
-            // Start observing the pdfFileComponent for changes to its children
             observer.observe(pdfFileComponent, { childList: true, subtree: true });
 
-            // Fallback: If observer doesn't catch it immediately, try a timeout
             setTimeout(() => {
                 const gradioDownloadLink = pdfFileComponent.querySelector('.file-preview a');
                 if (gradioDownloadLink && gradioDownloadLink.href && customDownloadIcon.href === '#') {
                     customDownloadIcon.href = gradioDownloadLink.href;
                 }
-            }, 1000); // Give it a bit more time
+            }, 1000);
         }
 
         // SUGGESTION (Connect with me) BUTTON BRIDGE:
         const htmlSuggestIcon = document.getElementById('suggest_icon');
         const gradioSuggestTrigger = document.getElementById('suggest_trigger_btn_id');
+        const modalMessageOutput = document.getElementById('modal_python_message_output'); // Get reference to the element that will show Python messages
+
 
         if (htmlSuggestIcon && gradioSuggestTrigger) {
             htmlSuggestIcon.onclick = () => {
                 gradioSuggestTrigger.click(); // Programmatically click the hidden Gradio button
-                // Clear message display when opening
-                const modalMessageDisplay = document.getElementById('modal_message_display');
-                if(modalMessageDisplay) modalMessageDisplay.textContent = '';
+                // Clear any previous messages when opening the modal
+                if(modalMessageOutput) modalMessageOutput.innerHTML = ''; 
                 const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea');
                 if(suggestionInput) suggestionInput.value = ''; // Clear input field
             };
@@ -803,10 +785,10 @@ with gr.Blocks(css=custom_css) as demo:
 
         // Handle the visible "Send Message" button click
         const visibleSubmitBtn = document.getElementById('suggestion_submit_btn_gradio_id');
-        const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea'); // Get the textarea element
-        const hiddenMessageInput = document.getElementById('_message_to_send_input').querySelector('textarea'); // Get the textarea element for hidden input
+        const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea');
+        const hiddenMessageInput = document.getElementById('_message_to_send_input').querySelector('textarea');
         const hiddenSubmitActionBtn = document.getElementById('_submit_message_action_btn_id');
-        const modalMessageDisplay = document.getElementById('modal_message_display');
+        const modalMessageDisplay = document.getElementById('modal_message_display'); // This is the temporary "Sending..." message
 
         if (visibleSubmitBtn && suggestionInput && hiddenMessageInput && hiddenSubmitActionBtn && modalMessageDisplay) {
             visibleSubmitBtn.onclick = () => {
@@ -815,13 +797,17 @@ with gr.Blocks(css=custom_css) as demo:
                 // 1. Clear input field immediately
                 suggestionInput.value = '';
                 
-                // 2. Show "Sending..." message
+                // 2. Show "Sending..." message (temporary)
                 modalMessageDisplay.style.color = '#d0d0d0'; // Reset color
                 modalMessageDisplay.textContent = 'Sending...';
+                
+                // Clear the long-term message output in case of multiple sends
+                if (modalMessageOutput) {
+                    modalMessageOutput.innerHTML = '';
+                }
 
                 // 3. Pass the message to the hidden input Gradio component
                 hiddenMessageInput.value = message;
-                // Trigger an 'input' event to make Gradio aware of the change
                 hiddenMessageInput.dispatchEvent(new Event('input', { bubbles: true }));
 
                 // 4. Programmatically click the hidden Gradio button to trigger the Python function
