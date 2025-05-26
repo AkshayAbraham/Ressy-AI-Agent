@@ -30,13 +30,13 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-def send_telegram_message(message: str) -> str:
-    """Sends a suggestion message to Telegram and returns a status string."""
+def send_telegram_message(message: str):
+    """Sends a suggestion message to Telegram and returns (status, clear_message)"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "ERROR: Telegram integration not configured on server."
+        return "ERROR: Telegram integration not configured on server.", message
 
     if not message.strip():
-        return "ERROR: Please enter a message before submitting"
+        return "ERROR: Please enter a message before submitting", message
 
     telegram_message_text = f"🌐 New Contact Message:\n\n{message}"
 
@@ -49,15 +49,15 @@ def send_telegram_message(message: str) -> str:
 
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            return "SUCCESS" # Signal success to JavaScript
+            return "SUCCESS", ""  # Return success status and empty message to clear input
         else:
             error_msg = f"Failed to send: {response.status_code} - {response.text}"
             print(f"Telegram API Error: {error_msg}")
-            return f"ERROR: {error_msg}"
+            return f"ERROR: {error_msg}", message  # Return error but keep user's message
     except Exception as e:
         error_msg = f"Network error: {str(e)}"
         print(f"Error sending Telegram message: {error_msg}")
-        return f"ERROR: {error_msg}"
+        return f"ERROR: {error_msg}", message  # Return error but keep user's message
 
 # --- Custom CSS ---
 custom_css = """
@@ -561,8 +561,8 @@ with gr.Blocks(css=custom_css) as demo:
             gr.HTML("""
             <div class="contact-info">
                 <p>Feel free to reach out directly or connect on my social channels:</p>
-                <p><strong>Email:</strong> <a href="mailto:akshay.abraham@example.com">akshay.abraham@example.com</a></p>
-                <p><strong>Phone:</strong> +44 123 456 7890</p>
+                <p><strong>Email:</strong> <a href="mailto:akshayabraham542@.com">akshayabraham542@gmail.com</a></p>
+    
             </div>
             <div class="social-links">
                 <a href="https://www.linkedin.com/in/akshay-abraham/" target="_blank" title="LinkedIn">
@@ -570,7 +570,7 @@ with gr.Blocks(css=custom_css) as demo:
                         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-.984-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
                     </svg>
                 </a>
-                <a href="https://github.com/akshay-abraham" target="_blank" title="GitHub">
+                <a href="https://github.com/AkshayAbraham" target="_blank" title="GitHub">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.087-.731.084-.716.084-.716 1.205.082 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.493.998.108-.776.417-1.305.76-1.605-2.665-.304-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.118-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576c4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                     </svg>
@@ -606,8 +606,7 @@ with gr.Blocks(css=custom_css) as demo:
     suggestion_submit_btn_gradio.click(
         fn=send_telegram_message,
         inputs=suggestion_box,
-        # Output the status to the hidden bridge for JS to pick up
-        outputs=telegram_status_output_bridge
+        outputs=[telegram_status_output_bridge, suggestion_box]  # Now outputs to both status bridge and suggestion box
     )
 
     gr.HTML("""
@@ -739,48 +738,56 @@ with gr.Blocks(css=custom_css) as demo:
         }
 
         // Handle Telegram submission status and animation
-        const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
-        const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
-        const successAnimationModal = document.getElementById('success_animation_modal');
-        const modalMessageDisplay = document.getElementById('modal_message_display'); // Get the div for messages within the modal
+const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
+const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
+const successAnimationModal = document.getElementById('success_animation_modal');
+const modalMessageDisplay = document.getElementById('modal_message_display');
 
-        if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
-            const observer = new MutationObserver((mutationsList) => {
-                for (const mutation of mutationsList) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                        const status = telegramStatusOutputBridge.value;
-                        if (status) {
-                            if (status === "SUCCESS") {
-                                // Hide the Gradio modal
-                                const gradioModalRoot = document.getElementById('suggestion_section_gradio');
-                                if (gradioModalRoot) {
-                                    gradioModalRoot.style.display = 'none';
-                                }
+if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                const status = telegramStatusOutputBridge.value;
+                if (status) {
+                    if (status === "SUCCESS") {
+                        // Hide Gradio modal
+                        const gradioModalRoot = document.getElementById('suggestion_section_gradio');
+                        if (gradioModalRoot) gradioModalRoot.style.display = 'none';
 
-                                // Show success animation
-                                successAnimationModal.style.display = 'block';
-                                setTimeout(() => {
-                                    successAnimationModal.style.display = 'none';
-                                    // Clear input after successful send (already done when opening modal)
-                                }, 2500); // Display animation for 2.5 seconds
+                        // Show success animation with message
+                        successAnimationModal.innerHTML = `
+                            <dotlottie-player
+                                src="https://lottie.host/805186b5-0c2d-450a-9d6c-6743b2f518e3/a87e5b1q7o.lottie"
+                                background="transparent"
+                                speed="1"
+                                style="width: 150px; height: 150px; margin: 0 auto;"
+                                autoplay>
+                            </dotlottie-player>
+                            <p style="margin-top: 15px; font-size: 1.2em;">Message sent successfully! 🎉</p>
+                        `;
+                        successAnimationModal.style.display = 'block';
 
-                            } else if (status.startsWith("ERROR:")) {
-                                modalMessageDisplay.style.color = '#ff6b6b';
-                                modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
-                            }
-                            telegramStatusOutputBridge.value = ''; // Clear the bridge value
-                        }
+                        setTimeout(() => {
+                            successAnimationModal.style.display = 'none';
+                        }, 3000);
+
+                    } else if (status.startsWith("ERROR:")) {
+                        modalMessageDisplay.style.color = '#ff6b6b';
+                        modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
                     }
+                    telegramStatusOutputBridge.value = '';
                 }
-            });
-
-            const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
-            if (targetNode) {
-                observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
-            } else {
-                console.warn("Could not find input/textarea element inside telegram_status_output_bridge for MutationObserver.");
             }
         }
+    });
+
+    const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
+    if (targetNode) {
+        observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
+    } else {
+        console.warn("Could not find input/textarea element inside telegram_status_output_bridge");
+    }
+}
     }); // End DOMContentLoaded
 </script>
 """)
