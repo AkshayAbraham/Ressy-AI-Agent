@@ -241,6 +241,8 @@ dotlottie-player {
     border-radius: 50% !important;
     width: 36px !important;
     height: 36px !important;
+    min-width: 36px !important; /* Ensure minimum size */
+    min-height: 36px !important; /* Ensure minimum size */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -581,12 +583,19 @@ with gr.Blocks(css=custom_css) as demo:
                 label="Send a Direct Message:",
                 lines=3,
                 max_lines=5,
-                placeholder="Type your message here, including your contact info (email/phone) if you'd like a response."
+                placeholder="Type your message here, including your contact info (email/phone) if you'd like a response.",
+                elem_id="suggestion_box_input_field" # ADDED: elem_id for JavaScript targeting
             )
+            # NEW: Hidden Textbox to pass message content from JS to Python
+            _message_to_send = gr.Textbox(visible=False, elem_id="_message_to_send_input")
+            # NEW: Hidden Button that will actually trigger the Python function
+            _submit_message_action_btn = gr.Button(visible=False, elem_id="_submit_message_action_btn_id")
+
             with gr.Row():
-                suggestion_submit_btn_gradio = gr.Button("Send Message", variant="primary")
+                # This button now primarily triggers JavaScript
+                suggestion_submit_btn_gradio = gr.Button("Send Message", variant="primary", elem_id="suggestion_submit_btn_gradio_id")
                 close_suggestion_btn_gradio = gr.Button("Close")
-            # Removed suggestion_status Gradio component, status is handled by JS in modal_message_display
+            
             gr.HTML('<div class="modal-message-display" id="modal_message_display"></div>') # For temporary messages like "Sending..." or "Error!"
     
     # Event handlers for the Gradio components
@@ -603,25 +612,11 @@ with gr.Blocks(css=custom_css) as demo:
         outputs=suggestion_section
     )
     
-    # MODIFIED: Added _js argument to clear input and show sending message immediately
-    suggestion_submit_btn_gradio.click(
+    # MODIFIED: _submit_message_action_btn is now responsible for calling the Python function
+    _submit_message_action_btn.click(
         fn=send_telegram_message,
-        inputs=suggestion_box,
-        outputs=telegram_status_output_bridge, # Only status output now
-        _js="""
-        (message) => {
-            const suggestionInput = document.querySelector('#suggestion_section_gradio textarea');
-            const modalMessageDisplay = document.getElementById('modal_message_display');
-            if (suggestionInput) {
-                suggestionInput.value = ''; // Clear input field immediately
-            }
-            if (modalMessageDisplay) {
-                modalMessageDisplay.style.color = '#d0d0d0'; // Reset color
-                modalMessageDisplay.textContent = 'Sending...'; // Show sending message
-            }
-            return [message]; // Pass original message to Python function
-        }
-        """
+        inputs=_message_to_send, # Uses the hidden textbox as input
+        outputs=telegram_status_output_bridge
     )
 
     gr.HTML("""
@@ -747,16 +742,45 @@ with gr.Blocks(css=custom_css) as demo:
                 // Clear message display when opening
                 const modalMessageDisplay = document.getElementById('modal_message_display');
                 if(modalMessageDisplay) modalMessageDisplay.textContent = '';
-                const suggestionInput = document.querySelector('#suggestion_section_gradio textarea');
+                const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea');
                 if(suggestionInput) suggestionInput.value = ''; // Clear input field
             };
         }
 
-        // Handle Telegram submission status and animation
+        // NEW: Handle the visible "Send Message" button click
+        const visibleSubmitBtn = document.getElementById('suggestion_submit_btn_gradio_id');
+        const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea'); // Get the textarea element
+        const hiddenMessageInput = document.getElementById('_message_to_send_input').querySelector('textarea'); // Get the textarea element for hidden input
+        const hiddenSubmitActionBtn = document.getElementById('_submit_message_action_btn_id');
+        const modalMessageDisplay = document.getElementById('modal_message_display');
+
+        if (visibleSubmitBtn && suggestionInput && hiddenMessageInput && hiddenSubmitActionBtn && modalMessageDisplay) {
+            visibleSubmitBtn.onclick = () => {
+                const message = suggestionInput.value;
+                
+                // 1. Clear input field immediately
+                suggestionInput.value = '';
+                
+                // 2. Show "Sending..." message
+                modalMessageDisplay.style.color = '#d0d0d0'; // Reset color
+                modalMessageDisplay.textContent = 'Sending...';
+
+                // 3. Pass the message to the hidden input Gradio component
+                hiddenMessageInput.value = message;
+                // Trigger an 'input' event to make Gradio aware of the change
+                hiddenMessageInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                // 4. Programmatically click the hidden Gradio button to trigger the Python function
+                hiddenSubmitActionBtn.click();
+            };
+        }
+
+
+        // Handle Telegram submission status and animation (existing logic, updated for context)
         const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
         const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
         const successAnimationModal = document.getElementById('success_animation_modal');
-        const modalMessageDisplay = document.getElementById('modal_message_display'); // Get the div for messages within the modal
+        // modalMessageDisplay already defined above
 
         if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
             const observer = new MutationObserver((mutationsList) => {
@@ -771,7 +795,7 @@ with gr.Blocks(css=custom_css) as demo:
                                     gradioModalRoot.style.display = 'none';
                                 }
 
-                                // Show success animation
+                                // Show success animation (which includes the plane flying and turning into a checkmark)
                                 successAnimationModal.style.display = 'block';
                                 setTimeout(() => {
                                     successAnimationModal.style.display = 'none';
