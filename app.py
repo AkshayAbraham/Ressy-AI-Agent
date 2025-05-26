@@ -36,7 +36,7 @@ def send_telegram_message(message: str) -> str:
         return "ERROR: Telegram integration not configured on server."
 
     if not message.strip():
-        return "ERROR: Please enter a message before submitting"
+        return "ERROR: Please enter a message before submitting."
 
     telegram_message_text = f"🌐 New Contact Message:\n\n{message}"
 
@@ -603,11 +603,25 @@ with gr.Blocks(css=custom_css) as demo:
         outputs=suggestion_section
     )
     
+    # MODIFIED: Added _js argument to clear input and show sending message immediately
     suggestion_submit_btn_gradio.click(
         fn=send_telegram_message,
         inputs=suggestion_box,
-        # Output the status to the hidden bridge for JS to pick up
-        outputs=telegram_status_output_bridge
+        outputs=telegram_status_output_bridge, # Only status output now
+        _js="""
+        (message) => {
+            const suggestionInput = document.querySelector('#suggestion_section_gradio textarea');
+            const modalMessageDisplay = document.getElementById('modal_message_display');
+            if (suggestionInput) {
+                suggestionInput.value = ''; // Clear input field immediately
+            }
+            if (modalMessageDisplay) {
+                modalMessageDisplay.style.color = '#d0d0d0'; // Reset color
+                modalMessageDisplay.textContent = 'Sending...'; // Show sending message
+            }
+            return [message]; // Pass original message to Python function
+        }
+        """
     )
 
     gr.HTML("""
@@ -761,7 +775,6 @@ with gr.Blocks(css=custom_css) as demo:
                                 successAnimationModal.style.display = 'block';
                                 setTimeout(() => {
                                     successAnimationModal.style.display = 'none';
-                                    // Clear input after successful send (already done when opening modal)
                                 }, 2500); // Display animation for 2.5 seconds
 
                             } else if (status.startsWith("ERROR:")) {
