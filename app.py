@@ -36,7 +36,7 @@ def send_telegram_message(message: str) -> str:
         return "ERROR: Telegram integration not configured on server."
 
     if not message.strip():
-        return "ERROR: Please enter a message before submitting."
+        return "ERROR: Please enter a message before submitting"
 
     telegram_message_text = f"🌐 New Contact Message:\n\n{message}"
 
