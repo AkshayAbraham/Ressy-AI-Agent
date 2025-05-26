@@ -619,6 +619,60 @@ with gr.Blocks(css=custom_css) as demo:
         outputs=telegram_status_output_bridge
     )
 
+    # NEW: Gradio .change() event listener for telegram_status_output_bridge
+    # This directly listens for changes to the bridge's value from the backend
+    telegram_status_output_bridge.change(
+        None, # No Python function needs to be called directly here
+        None, # No inputs needed
+        None, # No outputs needed for this side-effect JS
+        _js="""
+        (status_value) => {
+            // Get references to the necessary DOM elements
+            const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
+            const successAnimationModal = document.getElementById('success_animation_modal');
+            const modalMessageDisplay = document.getElementById('modal_message_display');
+
+            console.log("Status from telegram_status_output_bridge:", status_value); // Log status for debugging
+
+            if (status_value) {
+                if (status_value === "SUCCESS") {
+                    // Hide the main "Connect with me" modal
+                    if (suggestionSectionGradio) {
+                        suggestionSectionGratio.style.display = 'none';
+                    }
+                    // Clear the "Sending..." message
+                    if (modalMessageDisplay) {
+                        modalMessageDisplay.textContent = '';
+                    }
+                    
+                    // Show success animation (this includes the plane flying and turning into a checkmark)
+                    if (successAnimationModal) {
+                        successAnimationModal.style.display = 'block';
+                        setTimeout(() => {
+                            successAnimationModal.style.display = 'none'; // Hide it after 2.5 seconds
+                        }, 2500);
+                    }
+
+                } else if (status_value.startsWith("ERROR:")) {
+                    if (modalMessageDisplay) {
+                        modalMessageDisplay.style.color = '#ff6b6b';
+                        modalMessageDisplay.textContent = status_value.replace("ERROR:", "❌");
+                    }
+                }
+                // Important: Clear the bridge's value by sending a blank input event to its internal textarea.
+                // This ensures the .change() event can be re-triggered for subsequent messages
+                // even if the status is the same (e.g., multiple successes).
+                const bridgeInput = document.getElementById('telegram_status_output_bridge').querySelector('textarea');
+                if (bridgeInput) {
+                    bridgeInput.value = '';
+                    bridgeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        }
+        """
+    )
+
+
     gr.HTML("""
 <style>
     /* Your CSS is defined in the custom_css python string above.
@@ -747,7 +801,7 @@ with gr.Blocks(css=custom_css) as demo:
             };
         }
 
-        // NEW: Handle the visible "Send Message" button click
+        // Handle the visible "Send Message" button click
         const visibleSubmitBtn = document.getElementById('suggestion_submit_btn_gradio_id');
         const suggestionInput = document.getElementById('suggestion_box_input_field').querySelector('textarea'); // Get the textarea element
         const hiddenMessageInput = document.getElementById('_message_to_send_input').querySelector('textarea'); // Get the textarea element for hidden input
@@ -773,50 +827,6 @@ with gr.Blocks(css=custom_css) as demo:
                 // 4. Programmatically click the hidden Gradio button to trigger the Python function
                 hiddenSubmitActionBtn.click();
             };
-        }
-
-
-        // Handle Telegram submission status and animation (existing logic, updated for context)
-        const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
-        const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
-        const successAnimationModal = document.getElementById('success_animation_modal');
-        // modalMessageDisplay already defined above
-
-        if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
-            const observer = new MutationObserver((mutationsList) => {
-                for (const mutation of mutationsList) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                        const status = telegramStatusOutputBridge.value;
-                        if (status) {
-                            if (status === "SUCCESS") {
-                                // Hide the Gradio modal
-                                const gradioModalRoot = document.getElementById('suggestion_section_gradio');
-                                if (gradioModalRoot) {
-                                    gradioModalRoot.style.display = 'none';
-                                }
-
-                                // Show success animation (which includes the plane flying and turning into a checkmark)
-                                successAnimationModal.style.display = 'block';
-                                setTimeout(() => {
-                                    successAnimationModal.style.display = 'none';
-                                }, 2500); // Display animation for 2.5 seconds
-
-                            } else if (status.startsWith("ERROR:")) {
-                                modalMessageDisplay.style.color = '#ff6b6b';
-                                modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
-                            }
-                            telegramStatusOutputBridge.value = ''; // Clear the bridge value
-                        }
-                    }
-                }
-            });
-
-            const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
-            if (targetNode) {
-                observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
-            } else {
-                console.warn("Could not find input/textarea element inside telegram_status_output_bridge for MutationObserver.");
-            }
         }
     }); // End DOMContentLoaded
 </script>
