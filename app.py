@@ -258,7 +258,50 @@ button[aria-label="Scroll to bottom"] {
     display: none !important;
 }
 
-/* Styles for the info modal scrollbar */
+/* --- TOP ICONS --- */
+.top-icons {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    display: flex !important;
+    gap: 15px !important;
+    z-index: 1000 !important;
+}
+
+.top-icons button,
+.top-icons a {
+    background-color: #333 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, transform 0.2s ease !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.top-icons button:hover,
+.top-icons a:hover {
+    background-color: #4a90e2 !important;
+    transform: translateY(-2px) !important;
+}
+
+.top-icons svg {
+    fill: #f0f0f0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
+}
+/* --- END TOP ICONS --- */
+
+
+/* --- INFO MODAL --- */
 #info_modal::-webkit-scrollbar {
     width: 0 !important;
     height: 0 !important;
@@ -267,50 +310,86 @@ button[aria-label="Scroll to bottom"] {
 #info_modal {
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE/Edge */
+    
+    display: none; /* IMPORTANT: Hide by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2C2C2C !important; /* Consistent with other modal */
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    z-index: 9998; /* Just below the Telegram success animation (9999 or 10000) */
+    max-width: 600px; /* Adjust as needed */
+    width: 90%; /* Responsive width */
+    max-height: 80vh; /* Make it scrollable if content is too long */
+    overflow-y: auto; /* Enable scrolling for content */
+    box-sizing: border-box; /* Include padding in width/height */
 }
 
-/* --- TOP ICONS --- */
-/* Top Icons Container */
-.top-icons {
-    position: fixed !important; /* Ensure position */
-    top: 20px !important;
-    right: 20px !important;
-    display: flex !important;
-    gap: 15px !important;
-    z-index: 1000 !important; /* Ensure it's on top of other content */
+#info_modal h3 {
+    color: #61dafb;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    text-align: center;
 }
 
-.top-icons button,
-.top-icons a {
-    background-color: #333 !important; /* Dark background for icons */
-    border: none !important;
-    border-radius: 50% !important; /* Make them circular */
-    width: 40px !important; /* Fixed size for buttons */
-    height: 40px !important; /* Fixed size for buttons */
-    min-width: 40px !important; /* Ensure min-width */
-    min-height: 40px !important; /* Ensure min-height */
-    display: flex !important; /* Use flex to center SVG */
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    transition: background-color 0.2s ease, transform 0.2s ease !important;
-    padding: 0 !important; /* Remove default padding */
-    box-sizing: border-box !important; /* Important for consistent sizing */
+#info_modal p, #info_modal ul, #info_modal .disclaimer {
+    color: #d0d0d0;
+    line-height: 1.6;
+    margin-bottom: 10px;
 }
 
-.top-icons button:hover,
-.top-icons a:hover {
-    background-color: #4a90e2 !important; /* Highlight on hover */
-    transform: translateY(-2px) !important;
+#info_modal ul {
+    padding-left: 20px;
 }
 
-.top-icons svg {
-    fill: #f0f0f0 !important; /* Color of the SVG icons */
-    width: 24px !important; /* Force SVG width */
-    height: 24px !important; /* Force SVG height */
-    display: block !important;
+#info_modal li {
+    margin-bottom: 5px;
 }
-/* --- END TOP ICONS --- */
+
+#info_modal a {
+    color: #4a90e2;
+    text-decoration: none;
+}
+
+#info_modal a:hover {
+    text-decoration: underline;
+}
+
+#info_modal .disclaimer {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background-color: #383838;
+    font-size: 0.9em;
+}
+
+#info_modal button {
+    background-color: #4a90e2; /* Consistent button style */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 20px;
+    display: block; /* Make it take full width */
+    width: fit-content; /* Adjust to content width */
+    margin-left: auto;
+    margin-right: auto; /* Center the button */
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+#info_modal button:hover {
+    background-color: #357ABD;
+    transform: scale(1.05);
+}
+/* --- END INFO MODAL --- */
 
 
 /* Styles for the Connect With Me modal (Gradio column) */
