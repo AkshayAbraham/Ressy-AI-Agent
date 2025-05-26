@@ -738,48 +738,56 @@ with gr.Blocks(css=custom_css) as demo:
         }
 
         // Handle Telegram submission status and animation
-        const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
-        const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
-        const successAnimationModal = document.getElementById('success_animation_modal');
-        const modalMessageDisplay = document.getElementById('modal_message_display'); // Get the div for messages within the modal
+const telegramStatusOutputBridge = document.getElementById('telegram_status_output_bridge');
+const suggestionSectionGradio = document.getElementById('suggestion_section_gradio');
+const successAnimationModal = document.getElementById('success_animation_modal');
+const modalMessageDisplay = document.getElementById('modal_message_display');
 
-        if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
-            const observer = new MutationObserver((mutationsList) => {
-                for (const mutation of mutationsList) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                        const status = telegramStatusOutputBridge.value;
-                        if (status) {
-                            if (status === "SUCCESS") {
-                                // Hide the Gradio modal
-                                const gradioModalRoot = document.getElementById('suggestion_section_gradio');
-                                if (gradioModalRoot) {
-                                    gradioModalRoot.style.display = 'none';
-                                }
+if (telegramStatusOutputBridge && suggestionSectionGradio && successAnimationModal && modalMessageDisplay) {
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                const status = telegramStatusOutputBridge.value;
+                if (status) {
+                    if (status === "SUCCESS") {
+                        // Hide Gradio modal
+                        const gradioModalRoot = document.getElementById('suggestion_section_gradio');
+                        if (gradioModalRoot) gradioModalRoot.style.display = 'none';
 
-                                // Show success animation
-                                successAnimationModal.style.display = 'block';
-                                setTimeout(() => {
-                                    successAnimationModal.style.display = 'none';
-                                    // Clear input after successful send (already done when opening modal)
-                                }, 2500); // Display animation for 2.5 seconds
+                        // Show success animation with message
+                        successAnimationModal.innerHTML = `
+                            <dotlottie-player
+                                src="https://lottie.host/805186b5-0c2d-450a-9d6c-6743b2f518e3/a87e5b1q7o.lottie"
+                                background="transparent"
+                                speed="1"
+                                style="width: 150px; height: 150px; margin: 0 auto;"
+                                autoplay>
+                            </dotlottie-player>
+                            <p style="margin-top: 15px; font-size: 1.2em;">Message sent successfully! 🎉</p>
+                        `;
+                        successAnimationModal.style.display = 'block';
 
-                            } else if (status.startsWith("ERROR:")) {
-                                modalMessageDisplay.style.color = '#ff6b6b';
-                                modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
-                            }
-                            telegramStatusOutputBridge.value = ''; // Clear the bridge value
-                        }
+                        setTimeout(() => {
+                            successAnimationModal.style.display = 'none';
+                        }, 3000);
+
+                    } else if (status.startsWith("ERROR:")) {
+                        modalMessageDisplay.style.color = '#ff6b6b';
+                        modalMessageDisplay.textContent = status.replace("ERROR:", "❌");
                     }
+                    telegramStatusOutputBridge.value = '';
                 }
-            });
-
-            const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
-            if (targetNode) {
-                observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
-            } else {
-                console.warn("Could not find input/textarea element inside telegram_status_output_bridge for MutationObserver.");
             }
         }
+    });
+
+    const targetNode = telegramStatusOutputBridge.querySelector('input, textarea');
+    if (targetNode) {
+        observer.observe(targetNode, { attributes: true, attributeFilter: ['value'] });
+    } else {
+        console.warn("Could not find input/textarea element inside telegram_status_output_bridge");
+    }
+}
     }); // End DOMContentLoaded
 </script>
 """)
