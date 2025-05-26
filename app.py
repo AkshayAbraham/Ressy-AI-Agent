@@ -1,5 +1,6 @@
 import gradio as gr
 from langchain.vectorstores import Chroma
+from gradio.components import Button
 from utils import (
     load_text_data,
     resume_chat_completion,
@@ -264,9 +265,12 @@ with gr.Blocks(css=custom_css) as demo:
         file_count="single",
         elem_id="pdf_file_component" # This ID helps us target it with JS
     )
+    
+    suggest_trigger = gr.Button(visible=False, elem_id="suggest_icon")
 
+    # Suggestion Section
     with gr.Column(visible=False) as suggestion_section:
-        with gr.Column():  # Replaced Box with Column
+        with gr.Column(elem_classes="suggestion-box"):
             gr.Markdown("### Send Your Feedback")
             suggestion_box = gr.Textbox(
                 label="Your suggestion", 
@@ -278,23 +282,25 @@ with gr.Blocks(css=custom_css) as demo:
                 suggestion_button = gr.Button("Submit", variant="primary")
                 close_button = gr.Button("Close")
             suggestion_status = gr.Textbox(label="Status", interactive=False)
-
-    # MODIFIED: Event handling
-    def toggle_suggestion_section():
+    
+    # Event handlers
+    def toggle_suggestion():
         return gr.update(visible=True)
     
-    def close_suggestion_section():
-        return gr.update(visible=False)
-
-    # Bind events
-    suggestion_button.click(
-        fn=send_telegram_message, 
-        inputs=suggestion_box, 
-        outputs=suggestion_status
-    )
-    close_button.click(
-        fn=close_suggestion_section,
+    suggest_trigger.click(
+        fn=toggle_suggestion,
         outputs=suggestion_section
+    )
+    
+    close_button.click(
+        fn=lambda: gr.update(visible=False),
+        outputs=suggestion_section
+    )
+    
+    suggestion_button.click(
+        fn=send_telegram_message,
+        inputs=suggestion_box,
+        outputs=suggestion_status
     )
 
 
@@ -504,12 +510,6 @@ with gr.Blocks(css=custom_css) as demo:
             }
         }, 500); // 500ms delay: Give Gradio time to fully render its components.
     });
-
-    document.getElementById('suggest_icon').onclick = function() {
-        // This will trigger the Gradio component to show
-        const event = new Event('click', { bubbles: true });
-        document.querySelector('#suggest_icon').dispatchEvent(event);
-    };
 </script>
 """)
 
