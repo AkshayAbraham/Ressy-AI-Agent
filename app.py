@@ -644,8 +644,8 @@ with gr.Blocks(css=custom_css) as demo:
         <br><br>
         What can I help you discover? 💡
         <ul>
-            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like **Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (AWS) ☁️**, and various tools and frameworks.</li>
-            <li>Project Showcase: Explore detailed information about his impactful projects, including **customer churn prediction 📉** and **NLP-based sentiment analysis 💬**.</li>
+            <li>Skills Deep Dive: Uncover Akshay's expertise in areas like Machine Learning 🧠, Deep Learning 📊, Data Analysis 📈, Python 🐍, SQL 🗄️, cloud platforms (Azure) ☁️, and various tools and frameworks.</li>
+            <li>Project Showcase: Explore detailed information about his impactful projects, including customer churn prediction 📉 and NLP-based sentiment analysis 💬.</li>
             <li>Experience & Impact: Learn about his professional roles, responsibilities, and the tangible results he delivered. 🚀</li>
             <li>Career Trajectory: Understand his career path and future aspirations. 🌟</li>
         </ul>
