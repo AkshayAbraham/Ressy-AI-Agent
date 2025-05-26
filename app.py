@@ -30,13 +30,13 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-def send_telegram_message(message: str) -> str:
-    """Sends a suggestion message to Telegram and returns a status string."""
+def send_telegram_message(message: str):
+    """Sends a suggestion message to Telegram and returns (status, clear_message)"""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return "ERROR: Telegram integration not configured on server."
+        return "ERROR: Telegram integration not configured on server.", message
 
     if not message.strip():
-        return "ERROR: Please enter a message before submitting"
+        return "ERROR: Please enter a message before submitting", message
 
     telegram_message_text = f"🌐 New Contact Message:\n\n{message}"
 
@@ -49,15 +49,15 @@ def send_telegram_message(message: str) -> str:
 
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            return "SUCCESS" # Signal success to JavaScript
+            return "SUCCESS", ""  # Return success status and empty message to clear input
         else:
             error_msg = f"Failed to send: {response.status_code} - {response.text}"
             print(f"Telegram API Error: {error_msg}")
-            return f"ERROR: {error_msg}"
+            return f"ERROR: {error_msg}", message  # Return error but keep user's message
     except Exception as e:
         error_msg = f"Network error: {str(e)}"
         print(f"Error sending Telegram message: {error_msg}")
-        return f"ERROR: {error_msg}"
+        return f"ERROR: {error_msg}", message  # Return error but keep user's message
 
 # --- Custom CSS ---
 custom_css = """
@@ -606,8 +606,7 @@ with gr.Blocks(css=custom_css) as demo:
     suggestion_submit_btn_gradio.click(
         fn=send_telegram_message,
         inputs=suggestion_box,
-        # Output the status to the hidden bridge for JS to pick up
-        outputs=telegram_status_output_bridge
+        outputs=[telegram_status_output_bridge, suggestion_box]  # Now outputs to both status bridge and suggestion box
     )
 
     gr.HTML("""
